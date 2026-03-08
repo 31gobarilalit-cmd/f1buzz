@@ -105,6 +105,15 @@ function normalizeBackendConstructorStandings(standings) {
   }));
 }
 
+function normalizeDriverKey(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function driverDisplayName(driver) {
+  if (!driver) return '';
+  return `${driver.givenName || ''} ${driver.familyName || ''}`.trim();
+}
+
 const API = {
 
   async getSchedule(season) {
@@ -156,6 +165,39 @@ const API = {
     const data = await apiFetch(`${JOLPICA}/${season}/constructorStandings/?limit=20`);
     const sl = data.MRData.StandingsTable.StandingsLists;
     return sl.length ? sl[0].ConstructorStandings : [];
+  },
+
+  async getDriverHeadshots(year) {
+    try {
+      const sessions = await apiFetch(`${OPENF1}/sessions?session_type=Race&year=${year}`);
+      const completed = sessions.filter(session => new Date(session.date_end) <= new Date());
+      const latest = completed[completed.length - 1];
+      if (!latest?.session_key) return {};
+
+      const drivers = await apiFetch(`${OPENF1}/drivers?session_key=${latest.session_key}`);
+      const map = {};
+      drivers.forEach(driver => {
+        const key = normalizeDriverKey(driver.full_name);
+        if (key && driver.headshot_url) map[key] = driver.headshot_url;
+      });
+      return map;
+    } catch (e) {
+      console.warn('OpenF1 driver headshots fetch failed:', e.message);
+      return {};
+    }
+  },
+
+  async attachDriverHeadshots(raceResult, year) {
+    if (!raceResult?.Results?.length) return raceResult;
+    const headshots = await this.getDriverHeadshots(year);
+    raceResult.Results = raceResult.Results.map(result => {
+      const key = normalizeDriverKey(driverDisplayName(result.Driver));
+      if (key && headshots[key]) {
+        result.Driver = { ...result.Driver, headshotUrl: headshots[key] };
+      }
+      return result;
+    });
+    return raceResult;
   },
 
   async getRecentResultsOpenF1(year) {

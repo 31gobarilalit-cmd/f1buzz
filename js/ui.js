@@ -79,8 +79,23 @@ function driverName(d) {
   return `${escapeHtml(d.givenName.charAt(0))}. ${escapeHtml(d.familyName)}`;
 }
 function driverFullName(d) {
-  if (!d) return '—';
+  if (!d) return '???';
   return escapeHtml(`${d.givenName} ${d.familyName}`);
+}
+
+function driverInitials(d) {
+  if (!d) return '??';
+  const first = (d.givenName || '').charAt(0);
+  const last = (d.familyName || '').charAt(0);
+  return escapeHtml((first + last).toUpperCase() || '??');
+}
+
+function driverAvatarMarkup(d) {
+  const headshot = d?.headshotUrl || d?.headshot_url || '';
+  if (headshot) {
+    return `<img class="pod-avatar-img" src="${escapeHtml(headshot)}" alt="${driverFullName(d)}" loading="lazy" referrerpolicy="no-referrer" />`;
+  }
+  return `<div class="pod-avatar-fallback">${driverInitials(d)}</div>`;
 }
 
 // ── FORMAT DATE ───────────────────────────────
@@ -125,6 +140,7 @@ function renderPodium(raceResult) {
     const color = teamColor(cid);
     return `
       <div class="podium-card ${positions[i]}">
+        <div class="pod-avatar">${driverAvatarMarkup(r.Driver)}</div>
         <div class="pod-pos ${positions[i]}">${trophies[i]}</div>
         <div class="pod-name">${driverFullName(r.Driver)}</div>
         <div class="pod-team" style="color:${escapeHtml(color)}">${escapeHtml(r.Constructor.name)}</div>

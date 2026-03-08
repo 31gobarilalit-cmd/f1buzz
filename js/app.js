@@ -169,7 +169,14 @@ async function loadHomePage(season) {
       const completedRaces = jolpikaResults.filter(r => raceStatus(r) === 'done');
       const lastRace = completedRaces[completedRaces.length - 1];
       if (lastRace) {
-        setText('heroEyebrow', `ROUND ${lastRace.round} · ${season} FORMULA ONE WORLD CHAMPIONSHIP`);
+        let podiumRace = lastRace;
+        try {
+          podiumRace = await API.getRaceResult(season, lastRace.round) || lastRace;
+          podiumRace = await API.attachDriverHeadshots(podiumRace, season);
+        } catch (e) {
+          console.warn('Full race result fetch failed, using fallback podium data:', e.message);
+        }
+        setText('heroEyebrow', `ROUND ${lastRace.round} ?? ${season} FORMULA ONE WORLD CHAMPIONSHIP`);
         const heroTitle = document.getElementById('heroTitle');
         if (heroTitle) {
           heroTitle.textContent = '';
@@ -184,7 +191,7 @@ async function loadHomePage(season) {
         setText('heroSubtitle',
           `${lastRace.Circuit.circuitName}, ${lastRace.Circuit.Location.locality} · ${fmtDate(lastRace.date)}`
         );
-        setHTML('podiumGrid', renderPodium(lastRace));
+        setHTML('podiumGrid', renderPodium(podiumRace));
       } else {
         setText('heroEyebrow', `${season} SEASON`);
         setText('heroTitle', 'Season Upcoming');
