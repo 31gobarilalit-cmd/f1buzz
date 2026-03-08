@@ -64,6 +64,9 @@ select { font-family: inherit; }
   display: flex;
   align-items: center;
   overflow: hidden;
+  position: relative;
+  z-index: 300;
+  flex-shrink: 0;
 }
 .ticker-inner {
   display: flex;
@@ -103,7 +106,7 @@ header {
   background: var(--dark);
   border-bottom: 2px solid var(--red);
   position: sticky;
-  top: 0;
+  top: 32px;
   z-index: 200;
   box-shadow: 0 2px 24px var(--red-glow);
 }
