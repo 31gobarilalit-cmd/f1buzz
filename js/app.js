@@ -132,6 +132,7 @@ async function loadHomePage(season) {
     const openF1Results = [];
     const hasOpenF1 = false;
 
+    setHTML('miniNews', '<div class="spinner-center"><div class="spinner"></div></div>');
     API.getNews()
       .then(items => setHTML('miniNews', renderMiniNews(items)))
       .catch(() => setHTML('miniNews', renderMiniNews([])));
@@ -205,7 +206,6 @@ async function loadHomePage(season) {
     setText('standingsBadge', `R${driverStandings[0]?.round || '—'}`);
 
     // News loads separately so slow feeds do not block the page
-    setHTML('miniNews', renderMiniNews([]));
 
     // Next race + countdown
     const nextRace = findNextRace(schedule);
