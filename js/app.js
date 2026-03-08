@@ -129,83 +129,49 @@ async function loadHomePage(season) {
       API.getDriverStandings(season).catch(() => []),
     ]);
 
-    const openF1Results = [];
-    const hasOpenF1 = false;
-
+    // News loads async so it doesn't block the rest of the page
     setHTML('miniNews', '<div class="spinner-center"><div class="spinner"></div></div>');
     API.getNews()
       .then(items => setHTML('miniNews', renderMiniNews(items)))
       .catch(() => setHTML('miniNews', renderMiniNews([])));
 
     // Hero section
-    if (hasOpenF1) {
-      const last   = openF1Results[0];
-      const winner = last.top3[0]?.driver;
-      setText('heroEyebrow', `${season} FORMULA ONE WORLD CHAMPIONSHIP`);
-      // heroTitle contains mixed text + flag emoji — safe to set via textContent per node
+    const completedRaces = jolpikaResults.filter(r => raceStatus(r) === 'done');
+    const lastRace = completedRaces[completedRaces.length - 1];
+    if (lastRace) {
+      let podiumRace = lastRace;
+      try {
+        podiumRace = await API.getRaceResult(season, lastRace.round) || lastRace;
+        podiumRace = await API.attachDriverHeadshots(podiumRace, season);
+      } catch (e) {
+        console.warn('Full race result fetch failed, using fallback podium data:', e.message);
+      }
+      setText('heroEyebrow', `ROUND ${lastRace.round} · ${season} FORMULA ONE WORLD CHAMPIONSHIP`);
       const heroTitle = document.getElementById('heroTitle');
       if (heroTitle) {
         heroTitle.textContent = '';
         const flagSpan = document.createElement('span');
         flagSpan.className = 'country';
-        flagSpan.textContent = countryFlag(last.country);
+        flagSpan.textContent = countryFlag(lastRace.Circuit.Location.country);
         heroTitle.appendChild(flagSpan);
         heroTitle.appendChild(document.createTextNode(
-          ` ${last.meeting_name.replace(' Grand Prix','')} GRAND PRIX`
+          ` ${lastRace.raceName.replace(' Grand Prix','')} GRAND PRIX`
         ));
       }
-      setText('heroSubtitle', `${last.country} · ${fmtDate(last.date.split('T')[0])}`);
-      setHTML('podiumGrid', last.top3.map((r, i) => {
-        const positions = ['p1','p2','p3'];
-        const trophies  = ['🥇','🥈','🥉'];
-        const color = r.driver.team_colour ? `#${r.driver.team_colour}` : '#888';
-        return `
-          <div class="podium-card ${positions[i]}">
-            <div class="pod-pos ${positions[i]}">${trophies[i]}</div>
-            <div class="pod-name">${escapeHtml(r.driver.full_name || '—')}</div>
-            <div class="pod-team" style="color:${escapeHtml(color)}">${escapeHtml(r.driver.team_name || '—')}</div>
-          </div>`;
-      }).join(''));
+      setText('heroSubtitle',
+        `${lastRace.Circuit.circuitName}, ${lastRace.Circuit.Location.locality} · ${fmtDate(lastRace.date)}`
+      );
+      setHTML('podiumGrid', renderPodium(podiumRace));
     } else {
-      const completedRaces = jolpikaResults.filter(r => raceStatus(r) === 'done');
-      const lastRace = completedRaces[completedRaces.length - 1];
-      if (lastRace) {
-        let podiumRace = lastRace;
-        try {
-          podiumRace = await API.getRaceResult(season, lastRace.round) || lastRace;
-          podiumRace = await API.attachDriverHeadshots(podiumRace, season);
-        } catch (e) {
-          console.warn('Full race result fetch failed, using fallback podium data:', e.message);
-        }
-        setText('heroEyebrow', `ROUND ${lastRace.round} ?? ${season} FORMULA ONE WORLD CHAMPIONSHIP`);
-        const heroTitle = document.getElementById('heroTitle');
-        if (heroTitle) {
-          heroTitle.textContent = '';
-          const flagSpan = document.createElement('span');
-          flagSpan.className = 'country';
-          flagSpan.textContent = countryFlag(lastRace.Circuit.Location.country);
-          heroTitle.appendChild(flagSpan);
-          heroTitle.appendChild(document.createTextNode(
-            ` ${lastRace.raceName.replace(' Grand Prix','')} GRAND PRIX`
-          ));
-        }
-        setText('heroSubtitle',
-          `${lastRace.Circuit.circuitName}, ${lastRace.Circuit.Location.locality} · ${fmtDate(lastRace.date)}`
-        );
-        setHTML('podiumGrid', renderPodium(podiumRace));
-      } else {
-        setText('heroEyebrow', `${season} SEASON`);
-        setText('heroTitle', 'Season Upcoming');
-        setText('heroSubtitle', 'No races completed yet');
-        setHTML('podiumGrid', '<div class="podium-loading"><span>Season has not started yet</span></div>');
-      }
+      setText('heroEyebrow', `${season} SEASON`);
+      setText('heroTitle', 'Season Upcoming');
+      setText('heroSubtitle', 'No races completed yet');
+      setHTML('podiumGrid', '<div class="podium-loading"><span>Season has not started yet</span></div>');
     }
 
     // Mini standings
     setHTML('miniStandings', renderMiniStandings(driverStandings));
     setText('standingsBadge', `R${driverStandings[0]?.round || '—'}`);
-
-    // News loads separately so slow feeds do not block the page
 
     // Next race + countdown
     const nextRace = findNextRace(schedule);
@@ -220,10 +186,7 @@ async function loadHomePage(season) {
 
     // Season stats
     setText('statRaces', schedule.length);
-    const completedCount = hasOpenF1
-      ? openF1Results.length
-      : jolpikaResults.filter(r => raceStatus(r) === 'done').length;
-    setText('statDone', completedCount);
+    setText('statDone', completedRaces.length);
     const leader = driverStandings[0];
     if (leader) {
       setText('statLeader', leader.Driver.code || leader.Driver.familyName);
@@ -231,31 +194,14 @@ async function loadHomePage(season) {
     }
 
     // Recent results strip
-    if (hasOpenF1) {
-      setHTML('recentResults', openF1Results.slice(0, 6).map(race => {
-        const w     = race.top3[0];
-        const color = w?.driver?.team_colour ? `#${w.driver.team_colour}` : 'var(--red)';
-        return `
-          <div class="result-card" style="border-left-color:${escapeHtml(color)}">
-            <div class="rc-round">${fmtDate(race.date.split('T')[0])}</div>
-            <div class="rc-flag">${countryFlag(race.country)}</div>
-            <div class="rc-name">${escapeHtml(race.meeting_name.replace(' Grand Prix',' GP'))}</div>
-            <div class="rc-winner">🏆 <strong>${escapeHtml(w?.driver?.full_name || '—')}</strong></div>
-            <div class="rc-team" style="color:${escapeHtml(color)}">${escapeHtml(w?.driver?.team_name || '—')}</div>
-          </div>`;
-      }).join(''));
-    } else if (jolpikaResults.length) {
+    if (jolpikaResults.length) {
       setHTML('recentResults', renderResultCards(jolpikaResults));
     } else {
       setHTML('recentResults', '<div style="color:var(--gray);padding:32px">No results yet this season.</div>');
     }
 
     // Ticker
-    const tickerItems = (hasOpenF1 ? openF1Results : jolpikaResults).slice(0, 5).map(r => {
-      if (hasOpenF1) {
-        const w = r.top3[0];
-        return `${r.meeting_name}: ${w?.driver?.full_name || '—'} (${w?.driver?.team_name || '—'}) wins`;
-      }
+    const tickerItems = jolpikaResults.slice(0, 5).map(r => {
       const w = r.Results?.[0];
       return w ? `${r.raceName}: ${driverFullName(w.Driver)} (${w.Constructor.name}) wins` : r.raceName;
     });
