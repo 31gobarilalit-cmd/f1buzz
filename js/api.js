@@ -51,9 +51,22 @@ const API = {
 
   // ── CHAMPION HISTORY ─────────────────────
   async getChampionHistory() {
-    // Get driver champions from 1950 to current in one go (high limit)
-    const data = await apiFetch(`${BASE}/driverStandings/1/?limit=80&offset=0`);
-    return data.MRData.StandingsTable.StandingsLists.reverse(); // newest first
+    // Fetch champions year by year from 1950 to current season
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let y = currentYear; y >= 2000; y--) years.push(y); // 2000–now for performance
+
+    const results = await Promise.allSettled(
+      years.map(y => apiFetch(`${BASE}/${y}/driverStandings/1/?limit=1`))
+    );
+
+    return results
+      .filter(r => r.status === 'fulfilled')
+      .map(r => {
+        const lists = r.value.MRData.StandingsTable.StandingsLists;
+        return lists.length ? lists[0] : null;
+      })
+      .filter(Boolean);
   },
 
   // ── SEASON LIST ───────────────────────────
