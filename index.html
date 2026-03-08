@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>F1BUZZ — Live Formula 1 Hub</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏎</text></svg>" />
+  <title>F1BUZZ â€” Live Formula 1 Hub</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸŽ</text></svg>" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -37,21 +37,24 @@
             <option value="2020">2020</option>
           </select>
         </div>
-        <div class="live-dot" id="liveDot">● LIVE</div>
+        <div class="live-dot" id="liveDot">â— LIVE</div>
         <div class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
           <span></span><span></span><span></span>
         </div>
       </div>
+          <div class="intro-video-actions">
+            <a class="intro-video-link" href="https://www.youtube.com/watch?v=aTcTexr3U7g" target="_blank" rel="noopener noreferrer">Open On YouTube</a>
+          </div>
     </div>
   </header>
 
   <!-- MOBILE MENU -->
   <div class="mobile-menu" id="mobileMenu">
-    <a href="#" data-page="home" onclick="showPage('home');closeMobileMenu()">🏠 HOME</a>
-    <a href="#" data-page="season" onclick="showPage('season');closeMobileMenu()">📅 SEASON</a>
-    <a href="#" data-page="standings" onclick="showPage('standings');closeMobileMenu()">🏆 STANDINGS</a>
-    <a href="#" data-page="history" onclick="showPage('history');closeMobileMenu()">📖 HISTORY</a>
-    <a href="#" data-page="analysis" onclick="showPage('analysis');closeMobileMenu()">📊 ANALYSIS</a>
+    <a href="#" data-page="home" onclick="showPage('home');closeMobileMenu()">ðŸ  HOME</a>
+    <a href="#" data-page="season" onclick="showPage('season');closeMobileMenu()">ðŸ“… SEASON</a>
+    <a href="#" data-page="standings" onclick="showPage('standings');closeMobileMenu()">ðŸ† STANDINGS</a>
+    <a href="#" data-page="history" onclick="showPage('history');closeMobileMenu()">ðŸ“– HISTORY</a>
+    <a href="#" data-page="analysis" onclick="showPage('analysis');closeMobileMenu()">ðŸ“Š ANALYSIS</a>
     <div style="padding:14px 24px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--border)">
       <span style="font-size:12px;color:var(--gray);letter-spacing:1px;font-family:'Share Tech Mono',monospace">SEASON</span>
       <select id="mobileSeasonSelect" style="background:var(--card);border:1px solid var(--border2);color:var(--gold);font-family:'Orbitron',monospace;font-size:13px;font-weight:700;padding:4px 8px;border-radius:4px;outline:none;">
@@ -75,13 +78,13 @@
         <div class="hero-bg-lines"></div>
         <div class="hero-inner">
           <div class="hero-left">
-            <div class="hero-eyebrow" id="heroEyebrow">Loading latest race…</div>
-            <h1 class="hero-title" id="heroTitle">—</h1>
-            <div class="hero-subtitle" id="heroSubtitle">—</div>
+            <div class="hero-eyebrow" id="heroEyebrow">Loading latest raceâ€¦</div>
+            <h1 class="hero-title" id="heroTitle">â€”</h1>
+            <div class="hero-subtitle" id="heroSubtitle">â€”</div>
             <div class="podium-grid" id="podiumGrid">
               <div class="podium-loading">
                 <div class="spinner"></div>
-                <span>Fetching race data…</span>
+                <span>Fetching race dataâ€¦</span>
               </div>
             </div>
           </div>
@@ -89,10 +92,39 @@
             <div class="mini-standings-card">
               <div class="mini-header">
                 <span id="standingsTitle">DRIVERS' STANDINGS</span>
-                <span class="mini-badge" id="standingsBadge">—</span>
+                <span class="mini-badge" id="standingsBadge">â€”</span>
               </div>
               <div id="miniStandings"><div class="spinner-center"><div class="spinner"></div></div></div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-wrap intro-video-section">
+        <div class="section-hdr">
+          <div class="section-title">INTRO VIDEO</div>
+        </div>
+        <div class="intro-video-card">
+          <div class="intro-video-copy">
+            <div class="intro-video-kicker">WELCOME TO F1BUZZ</div>
+            <h2 class="intro-video-title">Start Here Before The Lights Go Out</h2>
+            <p class="intro-video-text">
+              The intro video now plays directly on the page, starts muted by default, and can be unmuted any time with the player controls.
+            </p>
+          </div>
+          <div class="intro-video-shell">
+            <video
+              class="intro-video-frame"
+              autoplay
+              muted
+              controls
+              playsinline
+              loop
+              preload="metadata"
+            >
+              <source src="F1%20Opening%20Titles%202026.mp4" type="video/mp4" />
+              Your browser does not support the intro video.
+            </video>
           </div>
         </div>
       </section>
@@ -101,8 +133,8 @@
         <div class="two-col">
           <div class="next-race-card" id="nextRaceCard">
             <div class="card-label">NEXT RACE</div>
-            <div class="next-race-name" id="nextRaceName">—</div>
-            <div class="next-race-meta" id="nextRaceMeta">—</div>
+            <div class="next-race-name" id="nextRaceName">â€”</div>
+            <div class="next-race-meta" id="nextRaceMeta">â€”</div>
             <div class="countdown-row" id="countdownRow">
               <div class="countdown-unit"><span class="cd-num" id="cdDays">--</span><span class="cd-label">DAYS</span></div>
               <div class="countdown-sep">:</div>
@@ -114,10 +146,10 @@
             </div>
           </div>
           <div class="stats-grid">
-            <div class="stat-tile"><div class="st-val" id="statRaces">—</div><div class="st-lbl">Races This Season</div></div>
-            <div class="stat-tile"><div class="st-val" id="statDone">—</div><div class="st-lbl">Completed</div></div>
-            <div class="stat-tile"><div class="st-val" id="statLeader">—</div><div class="st-lbl">Championship Leader</div></div>
-            <div class="stat-tile"><div class="st-val" id="statLeaderPts">—</div><div class="st-lbl">Leader Points</div></div>
+            <div class="stat-tile"><div class="st-val" id="statRaces">â€”</div><div class="st-lbl">Races This Season</div></div>
+            <div class="stat-tile"><div class="st-val" id="statDone">â€”</div><div class="st-lbl">Completed</div></div>
+            <div class="stat-tile"><div class="st-val" id="statLeader">â€”</div><div class="st-lbl">Championship Leader</div></div>
+            <div class="stat-tile"><div class="st-val" id="statLeaderPts">â€”</div><div class="st-lbl">Leader Points</div></div>
           </div>
         </div>
       </section>
@@ -125,7 +157,7 @@
       <section class="section-wrap">
         <div class="section-hdr">
           <div class="section-title">RECENT RESULTS</div>
-          <a href="#" class="see-all-btn" onclick="showPage('season')">VIEW FULL CALENDAR →</a>
+          <a href="#" class="see-all-btn" onclick="showPage('season')">VIEW FULL CALENDAR â†’</a>
         </div>
         <div class="results-strip" id="recentResults">
           <div class="spinner-center"><div class="spinner"></div></div>
@@ -150,7 +182,7 @@
               </tr>
             </thead>
             <tbody id="calendarBody">
-              <tr><td colspan="8" class="loading-cell"><div class="spinner"></div> Loading calendar…</td></tr>
+              <tr><td colspan="8" class="loading-cell"><div class="spinner"></div> Loading calendarâ€¦</td></tr>
             </tbody>
           </table>
         </div>
@@ -185,7 +217,7 @@
       </div>
       <div class="section-wrap">
         <div class="history-search-bar">
-          <input type="text" id="historySearch" placeholder="Search by driver, team or year…" />
+          <input type="text" id="historySearch" placeholder="Search by driver, team or yearâ€¦" />
         </div>
         <div class="table-card">
           <table class="data-table" id="historyTable">
@@ -193,7 +225,7 @@
               <tr><th>YEAR</th><th>DRIVER</th><th>NAT.</th><th>TEAM</th><th>WINS</th><th>PTS</th></tr>
             </thead>
             <tbody id="historyBody">
-              <tr><td colspan="6" class="loading-cell"><div class="spinner"></div> Loading…</td></tr>
+              <tr><td colspan="6" class="loading-cell"><div class="spinner"></div> Loadingâ€¦</td></tr>
             </tbody>
           </table>
         </div>
@@ -226,8 +258,8 @@
 
   <footer>
     <div class="footer-logo">F1BUZZ</div>
-    <div class="footer-sub">Live data · Updates automatically after each race</div>
-    <div class="footer-legal">Not affiliated with Formula One Management · Fan project</div>
+    <div class="footer-sub">Live data Â· Updates automatically after each race</div>
+    <div class="footer-legal">Not affiliated with Formula One Management Â· Fan project</div>
   </footer>
 
   <script src="js/api.js"></script>
@@ -261,3 +293,7 @@
   </script>
 </body>
 </html>
+
+
+
+
