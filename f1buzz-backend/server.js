@@ -177,7 +177,6 @@ async function scrapeConstructorStandings(year) {
   const $ = await fetchPage(url);
 
   const standings = [];
-  let foundDriverTable = false;
 
   $('table.wikitable').each((i, table) => {
     const headers = [];

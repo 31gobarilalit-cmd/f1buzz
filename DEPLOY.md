@@ -3,14 +3,16 @@
 ## Your Files
 ```
 f1buzz/
-├── index.html        ← Main site
+├── index.html              ← Main site
 ├── css/
-│   └── style.css     ← All styles + pagination styles
+│   └── style.css           ← All styles + video + pagination styles
 ├── js/
-│   ├── api.js        ← Jolpica F1 API calls (with cache expiry + error logging)
-│   ├── ui.js         ← Rendering helpers (XSS-safe + paginated history)
-│   └── app.js        ← App controller (state management + debounced search)
-└── DEPLOY.md         ← This file
+│   ├── api.js              ← Jolpica F1 API calls (with cache expiry + error logging)
+│   ├── ui.js               ← Rendering helpers (XSS-safe + paginated history)
+│   └── app.js              ← App controller (state management + debounced search)
+├── video/
+│   └── F1_Opening_Titles_2026.mp4  ← Intro video (place here!)
+└── DEPLOY.md               ← This file
 ```
 
 ---
@@ -35,9 +37,13 @@ Go to https://github.com and sign up (free).
    - `index.html`
    - `css/` folder (with `style.css` inside)
    - `js/` folder (with `api.js`, `ui.js`, `app.js` inside)
+   - `video/` folder (with `F1_Opening_Titles_2026.mp4` inside)
 3. Scroll down → click **"Commit changes"**
 
 > **Tip:** Make sure `index.html` is at the ROOT of the repo, not inside a subfolder.
+
+> **Video note:** GitHub has a **100 MB file size limit**. If your `.mp4` is larger than that,
+> use [Git LFS](https://git-lfs.com/) or host the video on Google Drive / YouTube and embed it instead.
 
 ---
 
@@ -82,6 +88,16 @@ Whenever you want to update:
 
 ## What Changed in This Version
 
+### `index.html`
+- Added **intro video section** ("STARTING GRID") on the home page
+- Fixed video `src` path — now correctly points to `video/F1_Opening_Titles_2026.mp4`
+- Video uses `autoplay`, `muted`, `loop`, `playsinline` for best browser compatibility
+
+### `css/style.css`
+- Added full **intro video card** styles (`.intro-video-section`, `.intro-video-card`, `.intro-video-shell`, etc.)
+- Responsive layout — video stacks below copy text on mobile (< 980px)
+- Added **pagination button** styles (`.pagination-row`, `.page-btn`)
+
 ### `js/api.js`
 - Cache now expires after **5 minutes** (previously grew forever with no expiry)
 - Silent `catch(e) {}` blocks replaced with `console.warn(...)` for easier debugging
@@ -101,8 +117,8 @@ Whenever you want to update:
 - History search uses **300ms debounce** — no longer fires on every keystroke
 - Hero title now uses `createElement` / `createTextNode` instead of raw innerHTML
 
-### `css/style.css`
-- Added pagination button styles (`.pagination-row`, `.page-btn`)
+### `server.js` (backend)
+- Removed unused `foundDriverTable` variable in `scrapeConstructorStandings()`
 
 ---
 
