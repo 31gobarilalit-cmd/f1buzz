@@ -5,11 +5,11 @@
 f1buzz/
 ├── index.html        ← Main site
 ├── css/
-│   └── style.css     ← All styles
+│   └── style.css     ← All styles + pagination styles
 ├── js/
-│   ├── api.js        ← Jolpica F1 API calls
-│   ├── ui.js         ← Rendering helpers
-│   └── app.js        ← App controller
+│   ├── api.js        ← Jolpica F1 API calls (with cache expiry + error logging)
+│   ├── ui.js         ← Rendering helpers (XSS-safe + paginated history)
+│   └── app.js        ← App controller (state management + debounced search)
 └── DEPLOY.md         ← This file
 ```
 
@@ -33,8 +33,8 @@ Go to https://github.com and sign up (free).
 1. In your new repo, click **"Add file"** → **"Upload files"**
 2. Drag and drop these files/folders:
    - `index.html`
-   - `css/` folder (with style.css inside)
-   - `js/` folder (with api.js, ui.js, app.js inside)
+   - `css/` folder (with `style.css` inside)
+   - `js/` folder (with `api.js`, `ui.js`, `app.js` inside)
 3. Scroll down → click **"Commit changes"**
 
 > **Tip:** Make sure `index.html` is at the ROOT of the repo, not inside a subfolder.
@@ -72,11 +72,37 @@ Whenever you want to update:
 ---
 
 ## How the Dynamic Data Works
-- **Jolpica API** (https://api.jolpi.ca) is called directly from the browser
-- No server needed — it's all client-side JavaScript
-- Data updates automatically after each race (API updates within hours of race end)
-- Rate limit: 200 requests/hour (more than enough for normal use)
-- Results are cached in memory per session to avoid hitting limits
+- **F1BUZZ Backend** (your Render.com server) is tried first for results, standings, and schedule
+- **Jolpica API** (https://api.jolpi.ca) is used as a fallback if the backend is unavailable
+- **OpenF1 API** (https://api.openf1.org) is used for live/recent race results on the home page
+- All API responses are cached in memory for 5 minutes per session to avoid hitting rate limits
+- Rate limit on Jolpica: 200 requests/hour — more than enough for normal use
+
+---
+
+## What Changed in This Version
+
+### `js/api.js`
+- Cache now expires after **5 minutes** (previously grew forever with no expiry)
+- Silent `catch(e) {}` blocks replaced with `console.warn(...)` for easier debugging
+- Magic numbers extracted to named constants (`CACHE_EXPIRY_MS`, `API_THROTTLE_DELAY_MS`)
+
+### `js/ui.js`
+- Added `escapeHtml()` — all API data is now HTML-escaped before rendering, **closing XSS vulnerability**
+- `TWO_HOURS_MS` constant replaces raw `7200000` magic number in `raceStatus()`
+- Removed unused `teamClass()` function
+- History table is now **paginated** (20 rows per page)
+- Added `debounce()` utility for search input
+
+### `js/app.js`
+- Global variables replaced with a single `AppState` object — **no more memory leaks** from stacked intervals
+- `setText()` / `setHTML()` helpers centralise all DOM writes
+- Countdown interval is now properly cleared when navigating away from home
+- History search uses **300ms debounce** — no longer fires on every keystroke
+- Hero title now uses `createElement` / `createTextNode` instead of raw innerHTML
+
+### `css/style.css`
+- Added pagination button styles (`.pagination-row`, `.page-btn`)
 
 ---
 

@@ -3,6 +3,10 @@
    Helper rendering functions
    ============================================= */
 
+// ── CONSTANTS ─────────────────────────────────
+const TWO_HOURS_MS    = 2 * 60 * 60 * 1000;
+const HISTORY_PER_PAGE = 20;
+
 // ── TEAM COLOUR MAP ───────────────────────────
 const TEAM_COLORS = {
   mclaren:       '#ff8000',
@@ -22,8 +26,25 @@ function teamColor(constructorId) {
   return TEAM_COLORS[constructorId] || '#888';
 }
 
-function teamClass(constructorId) {
-  return `c-${constructorId || 'default'}`;
+// ── SAFE TEXT HELPER ──────────────────────────
+// Use this instead of setting arbitrary strings via innerHTML
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ── DEBOUNCE ──────────────────────────────────
+function debounce(fn, delay) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn.apply(this, args), delay);
+  };
 }
 
 // ── NATIONALITY → FLAG EMOJI ──────────────────
@@ -55,11 +76,11 @@ function countryFlag(country) { return COUNTRY_FLAGS[country] || '🏁'; }
 // ── DRIVER DISPLAY NAME ───────────────────────
 function driverName(d) {
   if (!d) return '—';
-  return `${d.givenName.charAt(0)}. ${d.familyName}`;
+  return `${escapeHtml(d.givenName.charAt(0))}. ${escapeHtml(d.familyName)}`;
 }
 function driverFullName(d) {
   if (!d) return '—';
-  return `${d.givenName} ${d.familyName}`;
+  return escapeHtml(`${d.givenName} ${d.familyName}`);
 }
 
 // ── FORMAT DATE ───────────────────────────────
@@ -73,8 +94,8 @@ function raceStatus(race) {
   const now = new Date();
   const raceDate = new Date(race.date + 'T' + (race.time || '12:00:00Z'));
   const diff = raceDate - now;
-  if (diff < -7200000) return 'done';       // >2hrs past
-  if (diff < 7200000)  return 'live';       // within 2hrs either side
+  if (diff < -TWO_HOURS_MS) return 'done';
+  if (diff < TWO_HOURS_MS)  return 'live';
   return 'upcoming';
 }
 
@@ -106,8 +127,8 @@ function renderPodium(raceResult) {
       <div class="podium-card ${positions[i]}">
         <div class="pod-pos ${positions[i]}">${trophies[i]}</div>
         <div class="pod-name">${driverFullName(r.Driver)}</div>
-        <div class="pod-team" style="color:${color}">${r.Constructor.name}</div>
-        <div class="pod-time">${r.Time ? '+' + r.Time.time : r.status || ''}</div>
+        <div class="pod-team" style="color:${escapeHtml(color)}">${escapeHtml(r.Constructor.name)}</div>
+        <div class="pod-time">${r.Time ? '+' + escapeHtml(r.Time.time) : escapeHtml(r.status || '')}</div>
       </div>
     `;
   }).join('');
@@ -124,10 +145,10 @@ function renderMiniStandings(standings) {
     const posClass = posClasses[i] || '';
     return `
       <div class="mini-row">
-        <div class="mini-pos ${posClass}">${s.position}</div>
-        <div class="team-bar" style="background:${color}"></div>
+        <div class="mini-pos ${posClass}">${escapeHtml(s.position)}</div>
+        <div class="team-bar" style="background:${escapeHtml(color)}"></div>
         <div class="mini-name">${driverName(s.Driver)}</div>
-        <div class="mini-pts">${s.points}</div>
+        <div class="mini-pts">${escapeHtml(s.points)}</div>
       </div>
     `;
   }).join('');
@@ -135,7 +156,6 @@ function renderMiniStandings(standings) {
 
 // ── CALENDAR TABLE ROWS ───────────────────────
 function renderCalendarRows(schedule, results) {
-  // Build a results map keyed by round
   const resMap = {};
   (results || []).forEach(r => { resMap[r.round] = r; });
 
@@ -147,8 +167,8 @@ function renderCalendarRows(schedule, results) {
 
     const winnerCell = winner
       ? `<td><div class="td-driver">${driverName(winner.Driver)}</div></td>
-         <td><div class="td-team" style="color:${teamColor(winner.Constructor.constructorId)}">${winner.Constructor.name}</div></td>
-         <td class="td-date">${winner.laps || '—'}</td>`
+         <td><div class="td-team" style="color:${teamColor(winner.Constructor.constructorId)}">${escapeHtml(winner.Constructor.name)}</div></td>
+         <td class="td-date">${escapeHtml(winner.laps || '—')}</td>`
       : `<td>—</td><td>—</td><td>—</td>`;
 
     return `
@@ -156,10 +176,10 @@ function renderCalendarRows(schedule, results) {
         <td class="td-round">${String(race.round).padStart(2,'0')}</td>
         <td>
           <div style="font-size:20px;margin-bottom:4px">${cf}</div>
-          <div class="td-race">${race.raceName.replace(' Grand Prix','')}</div>
-          <div class="td-circuit">${race.Circuit.circuitName}</div>
+          <div class="td-race">${escapeHtml(race.raceName.replace(' Grand Prix',''))}</div>
+          <div class="td-circuit">${escapeHtml(race.Circuit.circuitName)}</div>
         </td>
-        <td class="td-date">${race.Circuit.Location.locality}</td>
+        <td class="td-date">${escapeHtml(race.Circuit.Location.locality)}</td>
         <td class="td-date">${fmtDate(race.date)}</td>
         ${winnerCell}
         <td>${statusBadge(st)}</td>
@@ -181,17 +201,17 @@ function renderDriverStandings(standings) {
     const pc = posClasses[s.position] || '';
     return `
       <div class="standings-row">
-        <div class="srow-pos ${pc}">${s.position}</div>
-        <div class="srow-team-bar" style="background:${color}"></div>
+        <div class="srow-pos ${pc}">${escapeHtml(s.position)}</div>
+        <div class="srow-team-bar" style="background:${escapeHtml(color)}"></div>
         <div class="srow-info">
           <div class="srow-name">${flag(s.Driver.nationality)} ${driverFullName(s.Driver)}</div>
-          <div class="srow-sub">${s.Constructors?.[0]?.name || ''} · #${s.Driver.permanentNumber || '—'}</div>
+          <div class="srow-sub">${escapeHtml(s.Constructors?.[0]?.name || '')} · #${escapeHtml(s.Driver.permanentNumber || '—')}</div>
         </div>
         <div>
-          <div class="pts-bar-wrap"><div class="pts-bar" style="width:${pct}%;background:${color}"></div></div>
+          <div class="pts-bar-wrap"><div class="pts-bar" style="width:${pct}%;background:${escapeHtml(color)}"></div></div>
         </div>
-        <div class="srow-wins"><span>${s.wins}</span> WIN${s.wins !== '1' ? 'S' : ''}</div>
-        <div class="srow-pts">${s.points}</div>
+        <div class="srow-wins"><span>${escapeHtml(s.wins)}</span> WIN${s.wins !== '1' ? 'S' : ''}</div>
+        <div class="srow-pts">${escapeHtml(s.points)}</div>
       </div>
     `;
   }).join('');
@@ -210,53 +230,73 @@ function renderConstructorStandings(standings) {
     const pc = posClasses[s.position] || '';
     return `
       <div class="standings-row">
-        <div class="srow-pos ${pc}">${s.position}</div>
-        <div class="srow-team-bar" style="background:${color}"></div>
+        <div class="srow-pos ${pc}">${escapeHtml(s.position)}</div>
+        <div class="srow-team-bar" style="background:${escapeHtml(color)}"></div>
         <div class="srow-info">
-          <div class="srow-name">${s.Constructor.name}</div>
-          <div class="srow-sub">${s.Constructor.nationality}</div>
+          <div class="srow-name">${escapeHtml(s.Constructor.name)}</div>
+          <div class="srow-sub">${escapeHtml(s.Constructor.nationality)}</div>
         </div>
         <div>
-          <div class="pts-bar-wrap"><div class="pts-bar" style="width:${pct}%;background:${color}"></div></div>
+          <div class="pts-bar-wrap"><div class="pts-bar" style="width:${pct}%;background:${escapeHtml(color)}"></div></div>
         </div>
-        <div class="srow-wins"><span>${s.wins}</span> WIN${s.wins !== '1' ? 'S' : ''}</div>
-        <div class="srow-pts">${s.points}</div>
+        <div class="srow-wins"><span>${escapeHtml(s.wins)}</span> WIN${s.wins !== '1' ? 'S' : ''}</div>
+        <div class="srow-pts">${escapeHtml(s.points)}</div>
       </div>
     `;
   }).join('');
 }
 
-// ── HISTORY TABLE ─────────────────────────────
-function renderHistoryRows(list, filter) {
-  const q = (filter || '').toLowerCase();
-  return list
-    .filter(sl => {
-      if (!q) return true;
-      const d = sl.DriverStandings?.[0]?.Driver;
-      const c = sl.DriverStandings?.[0]?.Constructors?.[0];
-      const txt = `${sl.season} ${d?.givenName} ${d?.familyName} ${c?.name}`.toLowerCase();
-      return txt.includes(q);
-    })
-    .map(sl => {
-      const s = sl.DriverStandings?.[0];
-      if (!s) return '';
-      const d = s.Driver;
-      const c = s.Constructors?.[0];
-      const color = teamColor(c?.constructorId);
-      return `
-        <tr>
-          <td><span class="year-champ-badge">${sl.season}</span></td>
-          <td>
-            <div style="font-weight:700">${flag(d.nationality)} ${driverFullName(d)}</div>
-            <div style="font-size:11px;color:var(--gray)">${d.nationality}</div>
-          </td>
-          <td>${flag(d.nationality)} ${d.nationality}</td>
-          <td style="color:${color};font-weight:700">${c?.name || '—'}</td>
-          <td style="font-family:'Orbitron',monospace;font-weight:700;color:var(--red)">${s.wins}</td>
-          <td style="font-family:'Orbitron',monospace;font-weight:700;color:var(--gold)">${s.points}</td>
-        </tr>
-      `;
-    }).join('');
+// ── HISTORY TABLE (paginated) ─────────────────
+function renderHistoryRows(list, filter, page = 1) {
+  // Escape the filter string before using it as a search term
+  const q = escapeHtml((filter || '')).toLowerCase();
+
+  const filtered = list.filter(sl => {
+    if (!q) return true;
+    const d = sl.DriverStandings?.[0]?.Driver;
+    const c = sl.DriverStandings?.[0]?.Constructors?.[0];
+    const txt = `${sl.season} ${d?.givenName || ''} ${d?.familyName || ''} ${c?.name || ''}`.toLowerCase();
+    return txt.includes(q);
+  });
+
+  const start = (page - 1) * HISTORY_PER_PAGE;
+  const paginated = filtered.slice(start, start + HISTORY_PER_PAGE);
+
+  const rows = paginated.map(sl => {
+    const s = sl.DriverStandings?.[0];
+    if (!s) return '';
+    const d = s.Driver;
+    const c = s.Constructors?.[0];
+    const color = teamColor(c?.constructorId);
+    return `
+      <tr>
+        <td><span class="year-champ-badge">${escapeHtml(sl.season)}</span></td>
+        <td>
+          <div style="font-weight:700">${flag(d.nationality)} ${driverFullName(d)}</div>
+          <div style="font-size:11px;color:var(--gray)">${escapeHtml(d.nationality)}</div>
+        </td>
+        <td>${flag(d.nationality)} ${escapeHtml(d.nationality)}</td>
+        <td style="color:${escapeHtml(color)};font-weight:700">${escapeHtml(c?.name || '—')}</td>
+        <td style="font-family:'Orbitron',monospace;font-weight:700;color:var(--red)">${escapeHtml(s.wins)}</td>
+        <td style="font-family:'Orbitron',monospace;font-weight:700;color:var(--gold)">${escapeHtml(s.points)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  // Render pagination controls if needed
+  const totalPages = Math.ceil(filtered.length / HISTORY_PER_PAGE);
+  let pagination = '';
+  if (totalPages > 1) {
+    const btns = [];
+    for (let p = 1; p <= totalPages; p++) {
+      btns.push(
+        `<button class="page-btn ${p === page ? 'active' : ''}" onclick="handleHistoryPage(${p})">${p}</button>`
+      );
+    }
+    pagination = `<div class="pagination-row">${btns.join('')}</div>`;
+  }
+
+  return rows + pagination;
 }
 
 // ── RECENT RESULTS STRIP ──────────────────────
@@ -268,12 +308,12 @@ function renderResultCards(raceResults) {
     const color = teamColor(cid);
     const cf = countryFlag(race.Circuit.Location.country);
     return `
-      <div class="result-card" style="border-left-color:${color}">
-        <div class="rc-round">RD ${race.round} · ${fmtDate(race.date)}</div>
+      <div class="result-card" style="border-left-color:${escapeHtml(color)}">
+        <div class="rc-round">RD ${escapeHtml(race.round)} · ${fmtDate(race.date)}</div>
         <div class="rc-flag">${cf}</div>
-        <div class="rc-name">${race.raceName.replace(' Grand Prix', ' GP')}</div>
+        <div class="rc-name">${escapeHtml(race.raceName.replace(' Grand Prix', ' GP'))}</div>
         <div class="rc-winner">🏆 <strong>${driverFullName(w.Driver)}</strong></div>
-        <div class="rc-team" style="color:${color}">${w.Constructor.name}</div>
+        <div class="rc-team" style="color:${escapeHtml(color)}">${escapeHtml(w.Constructor.name)}</div>
       </div>
     `;
   }).join('');

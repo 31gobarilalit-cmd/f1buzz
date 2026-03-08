@@ -879,3 +879,30 @@ footer {
 .t-rb        { color: var(--rb); }
 .t-kick_sauber { color: var(--audi); }
 .t-sauber    { color: var(--audi); }
+
+/* ── PAGINATION ───────────────────────────────── */
+.pagination-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 0 4px;
+  flex-wrap: wrap;
+}
+.page-btn {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  color: var(--gray);
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.page-btn:hover,
+.page-btn.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}

@@ -2,11 +2,45 @@
    F1BUZZ — APP CONTROLLER
    ============================================= */
 
-let currentSeason = new Date().getFullYear();
-let countdownInterval = null;
+// ── CENTRALISED STATE ─────────────────────────
+const AppState = {
+  currentSeason: new Date().getFullYear(),
+  countdownInterval: null,
+  historyList: [],        // cached for search/pagination
+  historyPage: 1,
+
+  setCountdown(interval) {
+    if (this.countdownInterval) clearInterval(this.countdownInterval);
+    this.countdownInterval = interval;
+  },
+
+  clearCountdown() {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+    }
+  },
+};
+
+// ── SAFE DOM HELPERS ──────────────────────────
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value ?? '—';
+}
+
+function setHTML(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
 
 // ── PAGE NAVIGATION ───────────────────────────
 function showPage(name) {
+  // Clear countdown when leaving home page
+  const currentActive = document.querySelector('.page.active')?.id?.replace('page-', '');
+  if (currentActive === 'home' && name !== 'home') {
+    AppState.clearCountdown();
+  }
+
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
   const page = document.getElementById('page-' + name);
@@ -15,11 +49,10 @@ function showPage(name) {
   if (link) link.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  // Lazy-load page data
-  if (name === 'season')    loadSeasonPage(currentSeason);
-  if (name === 'standings') loadStandingsPage(currentSeason);
+  if (name === 'season')    loadSeasonPage(AppState.currentSeason);
+  if (name === 'standings') loadStandingsPage(AppState.currentSeason);
   if (name === 'history')   loadHistoryPage();
-  if (name === 'analysis')  loadAnalysisPage(currentSeason);
+  if (name === 'analysis')  loadAnalysisPage(AppState.currentSeason);
 }
 
 // ── TABS ──────────────────────────────────────
@@ -43,52 +76,53 @@ document.querySelectorAll('.nav-link').forEach(link => {
 
 // ── GLOBAL SEASON SELECTOR ────────────────────
 document.getElementById('globalSeasonSelect').addEventListener('change', function () {
-  currentSeason = parseInt(this.value);
-  // Reload active page with new season
+  AppState.currentSeason = parseInt(this.value);
   const activePage = document.querySelector('.page.active')?.id?.replace('page-', '');
-  if (activePage === 'season')    loadSeasonPage(currentSeason);
-  if (activePage === 'standings') loadStandingsPage(currentSeason);
-  if (activePage === 'home')      loadHomePage(currentSeason);
-  if (activePage === 'analysis')  loadAnalysisPage(currentSeason);
+  if (activePage === 'season')    loadSeasonPage(AppState.currentSeason);
+  if (activePage === 'standings') loadStandingsPage(AppState.currentSeason);
+  if (activePage === 'home')      loadHomePage(AppState.currentSeason);
+  if (activePage === 'analysis')  loadAnalysisPage(AppState.currentSeason);
 });
 
 // ── COUNTDOWN TIMER ───────────────────────────
 function startCountdown(raceDate, raceTime) {
   const target = new Date(raceDate + 'T' + (raceTime || '12:00:00Z'));
-  if (countdownInterval) clearInterval(countdownInterval);
+
   function tick() {
     const diff = target - new Date();
     if (diff <= 0) {
-      ['cdDays','cdHours','cdMins','cdSecs'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = '00';
-      });
-      clearInterval(countdownInterval);
+      ['cdDays','cdHours','cdMins','cdSecs'].forEach(id => setText(id, '00'));
+      AppState.clearCountdown();
       return;
     }
-    const d = Math.floor(diff / 86400000);
-    const h = Math.floor((diff % 86400000) / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    const pad = n => String(n).padStart(2, '0');
-    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = pad(val); };
-    set('cdDays', d); set('cdHours', h); set('cdMins', m); set('cdSecs', s);
+    const pad = n => String(Math.floor(n)).padStart(2, '0');
+    setText('cdDays',  pad(diff / 86400000));
+    setText('cdHours', pad((diff % 86400000) / 3600000));
+    setText('cdMins',  pad((diff % 3600000) / 60000));
+    setText('cdSecs',  pad((diff % 60000) / 1000));
   }
+
   tick();
-  countdownInterval = setInterval(tick, 1000);
+  AppState.setCountdown(setInterval(tick, 1000));
 }
 
 // ── TICKER ────────────────────────────────────
 function updateTicker(items) {
   const track = document.getElementById('tickerTrack');
   if (!track || !items.length) return;
-  track.innerHTML = items.map(t => `<span style="margin-right:60px">🏎 ${t}</span>`).join('');
+  // Use textContent per span to avoid HTML injection
+  track.innerHTML = '';
+  items.forEach(t => {
+    const span = document.createElement('span');
+    span.style.marginRight = '60px';
+    span.textContent = `🏎 ${t}`;
+    track.appendChild(span);
+  });
 }
 
 // ── LOAD HOME PAGE ─────────────────────────────
 async function loadHomePage(season) {
   try {
-    // Fetch schedule + jolpica results + openf1 results in parallel
     const [schedule, jolpikaResults, driverStandings, openF1Results] = await Promise.all([
       API.getSchedule(season),
       API.getResults(season).catch(() => []),
@@ -96,96 +130,111 @@ async function loadHomePage(season) {
       API.getRecentResultsOpenF1(season).catch(() => []),
     ]);
 
-    // Use OpenF1 results if available, otherwise fall back to Jolpica
     const hasOpenF1 = openF1Results.length > 0;
 
-    // Hero: use OpenF1 most recent race if available
+    // Hero section
     if (hasOpenF1) {
-      const last = openF1Results[0]; // newest first
+      const last   = openF1Results[0];
       const winner = last.top3[0]?.driver;
-      document.getElementById('heroEyebrow').textContent =
-        `${season} FORMULA ONE WORLD CHAMPIONSHIP`;
-      document.getElementById('heroTitle').innerHTML =
-        `<span class="country">${countryFlag(last.country)}</span> ${last.meeting_name.replace(' Grand Prix','')}<br>GRAND PRIX`;
-      document.getElementById('heroSubtitle').textContent =
-        `${last.country} · ${fmtDate(last.date.split('T')[0])}`;
-      document.getElementById('podiumGrid').innerHTML = last.top3.map((r, i) => {
+      setText('heroEyebrow', `${season} FORMULA ONE WORLD CHAMPIONSHIP`);
+      // heroTitle contains mixed text + flag emoji — safe to set via textContent per node
+      const heroTitle = document.getElementById('heroTitle');
+      if (heroTitle) {
+        heroTitle.textContent = '';
+        const flagSpan = document.createElement('span');
+        flagSpan.className = 'country';
+        flagSpan.textContent = countryFlag(last.country);
+        heroTitle.appendChild(flagSpan);
+        heroTitle.appendChild(document.createTextNode(
+          ` ${last.meeting_name.replace(' Grand Prix','')} GRAND PRIX`
+        ));
+      }
+      setText('heroSubtitle', `${last.country} · ${fmtDate(last.date.split('T')[0])}`);
+      setHTML('podiumGrid', last.top3.map((r, i) => {
         const positions = ['p1','p2','p3'];
-        const trophies = ['🥇','🥈','🥉'];
+        const trophies  = ['🥇','🥈','🥉'];
         const color = r.driver.team_colour ? `#${r.driver.team_colour}` : '#888';
         return `
           <div class="podium-card ${positions[i]}">
             <div class="pod-pos ${positions[i]}">${trophies[i]}</div>
-            <div class="pod-name">${r.driver.full_name || '—'}</div>
-            <div class="pod-team" style="color:${color}">${r.driver.team_name || '—'}</div>
+            <div class="pod-name">${escapeHtml(r.driver.full_name || '—')}</div>
+            <div class="pod-team" style="color:${escapeHtml(color)}">${escapeHtml(r.driver.team_name || '—')}</div>
           </div>`;
-      }).join('');
+      }).join(''));
     } else {
-      // Fall back to Jolpica
       const completedRaces = jolpikaResults.filter(r => raceStatus(r) === 'done');
       const lastRace = completedRaces[completedRaces.length - 1];
       if (lastRace) {
         const fullResult = await API.getRaceResult(season, lastRace.round);
-        document.getElementById('heroEyebrow').textContent =
-          `ROUND ${lastRace.round} · ${season} FORMULA ONE WORLD CHAMPIONSHIP`;
-        document.getElementById('heroTitle').innerHTML =
-          `<span class="country">${countryFlag(lastRace.Circuit.Location.country)}</span> ${lastRace.raceName.replace(' Grand Prix','')}<br>GRAND PRIX`;
-        document.getElementById('heroSubtitle').textContent =
-          `${lastRace.Circuit.circuitName}, ${lastRace.Circuit.Location.locality} · ${fmtDate(lastRace.date)}`;
-        document.getElementById('podiumGrid').innerHTML = renderPodium(fullResult);
+        setText('heroEyebrow', `ROUND ${lastRace.round} · ${season} FORMULA ONE WORLD CHAMPIONSHIP`);
+        const heroTitle = document.getElementById('heroTitle');
+        if (heroTitle) {
+          heroTitle.textContent = '';
+          const flagSpan = document.createElement('span');
+          flagSpan.className = 'country';
+          flagSpan.textContent = countryFlag(lastRace.Circuit.Location.country);
+          heroTitle.appendChild(flagSpan);
+          heroTitle.appendChild(document.createTextNode(
+            ` ${lastRace.raceName.replace(' Grand Prix','')} GRAND PRIX`
+          ));
+        }
+        setText('heroSubtitle',
+          `${lastRace.Circuit.circuitName}, ${lastRace.Circuit.Location.locality} · ${fmtDate(lastRace.date)}`
+        );
+        setHTML('podiumGrid', renderPodium(fullResult));
       } else {
-        document.getElementById('heroEyebrow').textContent = `${season} SEASON`;
-        document.getElementById('heroTitle').textContent = 'Season Upcoming';
-        document.getElementById('heroSubtitle').textContent = 'No races completed yet';
-        document.getElementById('podiumGrid').innerHTML = '<div class="podium-loading"><span>Season has not started yet</span></div>';
+        setText('heroEyebrow', `${season} SEASON`);
+        setText('heroTitle', 'Season Upcoming');
+        setText('heroSubtitle', 'No races completed yet');
+        setHTML('podiumGrid', '<div class="podium-loading"><span>Season has not started yet</span></div>');
       }
     }
 
-    // Mini standings (still from Jolpica)
-    document.getElementById('miniStandings').innerHTML = renderMiniStandings(driverStandings);
-    document.getElementById('standingsBadge').textContent = `R${driverStandings[0]?.round || '—'}`;
+    // Mini standings
+    setHTML('miniStandings', renderMiniStandings(driverStandings));
+    setText('standingsBadge', `R${driverStandings[0]?.round || '—'}`);
 
     // Next race + countdown
     const nextRace = findNextRace(schedule);
     if (nextRace) {
-      document.getElementById('nextRaceName').textContent = nextRace.raceName;
-      document.getElementById('nextRaceMeta').textContent =
-        `${nextRace.Circuit.circuitName} · ${fmtDate(nextRace.date)}`;
+      setText('nextRaceName', nextRace.raceName);
+      setText('nextRaceMeta', `${nextRace.Circuit.circuitName} · ${fmtDate(nextRace.date)}`);
       startCountdown(nextRace.date, nextRace.time);
     } else {
-      document.getElementById('nextRaceName').textContent = 'Season Complete';
-      document.getElementById('nextRaceMeta').textContent = 'See you next year!';
+      setText('nextRaceName', 'Season Complete');
+      setText('nextRaceMeta', 'See you next year!');
     }
 
     // Season stats
-    document.getElementById('statRaces').textContent = schedule.length;
-    const completedCount = hasOpenF1 ? openF1Results.length : jolpikaResults.filter(r => raceStatus(r) === 'done').length;
-    document.getElementById('statDone').textContent = completedCount;
+    setText('statRaces', schedule.length);
+    const completedCount = hasOpenF1
+      ? openF1Results.length
+      : jolpikaResults.filter(r => raceStatus(r) === 'done').length;
+    setText('statDone', completedCount);
     const leader = driverStandings[0];
     if (leader) {
-      document.getElementById('statLeader').textContent = leader.Driver.code || leader.Driver.familyName;
-      document.getElementById('statLeaderPts').textContent = leader.points + ' pts';
+      setText('statLeader', leader.Driver.code || leader.Driver.familyName);
+      setText('statLeaderPts', leader.points + ' pts');
     }
 
-    // Recent results strip — prefer OpenF1
+    // Recent results strip
     if (hasOpenF1) {
-      document.getElementById('recentResults').innerHTML = openF1Results.slice(0, 6).map(race => {
-        const w = race.top3[0];
+      setHTML('recentResults', openF1Results.slice(0, 6).map(race => {
+        const w     = race.top3[0];
         const color = w?.driver?.team_colour ? `#${w.driver.team_colour}` : 'var(--red)';
         return `
-          <div class="result-card" style="border-left-color:${color}">
+          <div class="result-card" style="border-left-color:${escapeHtml(color)}">
             <div class="rc-round">${fmtDate(race.date.split('T')[0])}</div>
             <div class="rc-flag">${countryFlag(race.country)}</div>
-            <div class="rc-name">${race.meeting_name.replace(' Grand Prix',' GP')}</div>
-            <div class="rc-winner">🏆 <strong>${w?.driver?.full_name || '—'}</strong></div>
-            <div class="rc-team" style="color:${color}">${w?.driver?.team_name || '—'}</div>
+            <div class="rc-name">${escapeHtml(race.meeting_name.replace(' Grand Prix',' GP'))}</div>
+            <div class="rc-winner">🏆 <strong>${escapeHtml(w?.driver?.full_name || '—')}</strong></div>
+            <div class="rc-team" style="color:${escapeHtml(color)}">${escapeHtml(w?.driver?.team_name || '—')}</div>
           </div>`;
-      }).join('');
+      }).join(''));
     } else if (jolpikaResults.length) {
-      document.getElementById('recentResults').innerHTML = renderResultCards(jolpikaResults);
+      setHTML('recentResults', renderResultCards(jolpikaResults));
     } else {
-      document.getElementById('recentResults').innerHTML =
-        '<div style="color:var(--gray);padding:32px">No results yet this season.</div>';
+      setHTML('recentResults', '<div style="color:var(--gray);padding:32px">No results yet this season.</div>');
     }
 
     // Ticker
@@ -202,16 +251,18 @@ async function loadHomePage(season) {
 
   } catch (err) {
     console.error('Home load error:', err);
-    document.getElementById('podiumGrid').innerHTML =
-      `<div class="podium-loading"><span style="color:var(--red)">⚠ Could not load data. Try again shortly.</span></div>`;
+    setHTML('podiumGrid',
+      '<div class="podium-loading"><span style="color:var(--red)">⚠ Could not load data. Try again shortly.</span></div>'
+    );
   }
 }
 
 // ── LOAD SEASON PAGE ──────────────────────────
 async function loadSeasonPage(season) {
-  document.getElementById('calendarTitle').textContent = `${season} SEASON`;
-  document.getElementById('calendarBody').innerHTML =
-    '<tr><td colspan="8" class="loading-cell"><div class="spinner"></div> Loading…</td></tr>';
+  setText('calendarTitle', `${season} SEASON`);
+  setHTML('calendarBody',
+    '<tr><td colspan="8" class="loading-cell"><div class="spinner"></div> Loading…</td></tr>'
+  );
 
   try {
     const [schedule, results] = await Promise.all([
@@ -219,9 +270,8 @@ async function loadSeasonPage(season) {
       API.getResults(season).catch(() => []),
     ]);
 
-    document.getElementById('calendarBody').innerHTML = renderCalendarRows(schedule, results);
+    setHTML('calendarBody', renderCalendarRows(schedule, results));
 
-    // Champion bar for past seasons
     const champBar = document.getElementById('seasonChampBar');
     if (season < new Date().getFullYear() && results.length === schedule.length) {
       const ds = await API.getDriverStandings(season).catch(() => []);
@@ -230,7 +280,7 @@ async function loadSeasonPage(season) {
         const dChamp = ds[0];
         const cChamp = cs[0];
         champBar.style.display = 'flex';
-        champBar.innerHTML = `
+        setHTML('seasonChampBar', `
           <div class="champ-item">
             <div class="champ-item-label">Drivers' Champion</div>
             <div class="champ-item-val" style="color:var(--gold)">${flag(dChamp.Driver.nationality)} ${driverFullName(dChamp.Driver)}</div>
@@ -238,77 +288,96 @@ async function loadSeasonPage(season) {
           <div class="champ-divider"></div>
           <div class="champ-item">
             <div class="champ-item-label">Team</div>
-            <div class="champ-item-val" style="color:${teamColor(dChamp.Constructors?.[0]?.constructorId)}">${dChamp.Constructors?.[0]?.name || '—'}</div>
+            <div class="champ-item-val" style="color:${teamColor(dChamp.Constructors?.[0]?.constructorId)}">${escapeHtml(dChamp.Constructors?.[0]?.name || '—')}</div>
           </div>
           <div class="champ-divider"></div>
           <div class="champ-item">
             <div class="champ-item-label">Constructors' Champion</div>
-            <div class="champ-item-val" style="color:${teamColor(cChamp.Constructor.constructorId)}">${cChamp.Constructor.name}</div>
+            <div class="champ-item-val" style="color:${teamColor(cChamp.Constructor.constructorId)}">${escapeHtml(cChamp.Constructor.name)}</div>
           </div>
           <div class="champ-divider"></div>
           <div class="champ-item">
             <div class="champ-item-label">Total Races</div>
             <div class="champ-item-val">${schedule.length}</div>
           </div>
-        `;
+        `);
       }
-    } else {
+    } else if (champBar) {
       champBar.style.display = 'none';
     }
   } catch (err) {
-    document.getElementById('calendarBody').innerHTML =
-      `<tr><td colspan="8" class="loading-cell" style="color:var(--red)">⚠ Failed to load — API may be rate-limited. Refresh in a moment.</td></tr>`;
+    console.error('Season page error:', err);
+    setHTML('calendarBody',
+      '<tr><td colspan="8" class="loading-cell" style="color:var(--red)">⚠ Failed to load — API may be rate-limited. Refresh in a moment.</td></tr>'
+    );
   }
 }
 
 // ── LOAD STANDINGS PAGE ────────────────────────
 async function loadStandingsPage(season) {
-  document.getElementById('standingsPageTitle').textContent = `${season} CHAMPIONSHIP`;
-  document.getElementById('driverStandingsWrap').innerHTML = '<div class="spinner-center"><div class="spinner"></div></div>';
-  document.getElementById('constructorStandingsWrap').innerHTML = '<div class="spinner-center"><div class="spinner"></div></div>';
+  setText('standingsPageTitle', `${season} CHAMPIONSHIP`);
+  setHTML('driverStandingsWrap',      '<div class="spinner-center"><div class="spinner"></div></div>');
+  setHTML('constructorStandingsWrap', '<div class="spinner-center"><div class="spinner"></div></div>');
 
   try {
     const [ds, cs] = await Promise.all([
       API.getDriverStandings(season),
       API.getConstructorStandings(season),
     ]);
-    document.getElementById('driverStandingsWrap').innerHTML = renderDriverStandings(ds);
-    document.getElementById('constructorStandingsWrap').innerHTML = renderConstructorStandings(cs);
+    setHTML('driverStandingsWrap',      renderDriverStandings(ds));
+    setHTML('constructorStandingsWrap', renderConstructorStandings(cs));
   } catch (err) {
+    console.error('Standings page error:', err);
     const msg = '<div style="padding:32px;color:var(--red)">⚠ Failed to load standings</div>';
-    document.getElementById('driverStandingsWrap').innerHTML = msg;
-    document.getElementById('constructorStandingsWrap').innerHTML = msg;
+    setHTML('driverStandingsWrap', msg);
+    setHTML('constructorStandingsWrap', msg);
   }
 }
 
-// ── LOAD HISTORY PAGE ─────────────────────────
-async function loadHistoryPage() {
-  // Only load once
-  if (document.getElementById('historyBody').children.length > 1 &&
-      !document.getElementById('historyBody').querySelector('.loading-cell')) return;
+// ── HISTORY PAGE ──────────────────────────────
+// Exposed globally so pagination buttons can call it
+function handleHistoryPage(page) {
+  AppState.historyPage = page;
+  const filter = document.getElementById('historySearch')?.value || '';
+  setHTML('historyBody', renderHistoryRows(AppState.historyList, filter, page));
+}
 
-  document.getElementById('historyBody').innerHTML =
-    '<tr><td colspan="6" class="loading-cell"><div class="spinner"></div> Loading champion history…</td></tr>';
+async function loadHistoryPage() {
+  if (
+    document.getElementById('historyBody').children.length > 1 &&
+    !document.getElementById('historyBody').querySelector('.loading-cell')
+  ) return;
+
+  setHTML('historyBody',
+    '<tr><td colspan="6" class="loading-cell"><div class="spinner"></div> Loading champion history…</td></tr>'
+  );
 
   try {
-    const list = await API.getChampionHistory();
-    const renderRows = (filter) => {
-      document.getElementById('historyBody').innerHTML = renderHistoryRows(list, filter);
-    };
-    renderRows('');
-    document.getElementById('historySearch').addEventListener('input', function() {
-      renderRows(this.value);
-    });
+    AppState.historyList = await API.getChampionHistory();
+    AppState.historyPage = 1;
+    setHTML('historyBody', renderHistoryRows(AppState.historyList, '', 1));
+
+    // Debounced search — re-attach only once
+    const searchEl = document.getElementById('historySearch');
+    if (searchEl && !searchEl.dataset.bound) {
+      searchEl.dataset.bound = 'true';
+      searchEl.addEventListener('input', debounce(function () {
+        AppState.historyPage = 1;
+        setHTML('historyBody', renderHistoryRows(AppState.historyList, this.value, 1));
+      }, 300));
+    }
   } catch (err) {
-    document.getElementById('historyBody').innerHTML =
-      '<tr><td colspan="6" class="loading-cell" style="color:var(--red)">⚠ Failed to load history</td></tr>';
+    console.error('History page error:', err);
+    setHTML('historyBody',
+      '<tr><td colspan="6" class="loading-cell" style="color:var(--red)">⚠ Failed to load history</td></tr>'
+    );
   }
 }
 
 // ── LOAD ANALYSIS PAGE ────────────────────────
 async function loadAnalysisPage(season) {
   const wrap = document.getElementById('analysisContent');
-  wrap.innerHTML = '<div class="spinner-center"><div class="spinner"></div></div>';
+  setHTML('analysisContent', '<div class="spinner-center"><div class="spinner"></div></div>');
 
   try {
     const [schedule, results, ds, cs] = await Promise.all([
@@ -319,10 +388,10 @@ async function loadAnalysisPage(season) {
     ]);
 
     const completed = results.filter(r => raceStatus(r) === 'done');
-    const leader = ds[0];
+    const leader  = ds[0];
     const cLeader = cs[0];
-    const last = completed[completed.length - 1];
-    const lastW = last?.Results?.[0];
+    const last    = completed[completed.length - 1];
+    const lastW   = last?.Results?.[0];
 
     // Win counts
     const winMap = {};
@@ -333,9 +402,8 @@ async function loadAnalysisPage(season) {
         winMap[name] = (winMap[name] || 0) + 1;
       }
     });
-    const topWinner = Object.entries(winMap).sort((a,b) => b[1]-a[1])[0];
+    const topWinner = Object.entries(winMap).sort((a, b) => b[1] - a[1])[0];
 
-    // Team wins
     const teamWinMap = {};
     completed.forEach(r => {
       const w = r.Results?.[0];
@@ -344,23 +412,25 @@ async function loadAnalysisPage(season) {
         teamWinMap[t] = (teamWinMap[t] || 0) + 1;
       }
     });
-    const topTeam = Object.entries(teamWinMap).sort((a,b) => b[1]-a[1])[0];
+    const topTeam = Object.entries(teamWinMap).sort((a, b) => b[1] - a[1])[0];
 
-    wrap.innerHTML = `
+    setHTML('analysisContent', `
       <div class="analysis-grid">
         ${last ? `
         <div class="analysis-card featured">
-          <div class="an-tag gold">🏁 LATEST RACE · ${season} ROUND ${last.round}</div>
-          <div class="an-title">${last.raceName} — Race Report</div>
+          <div class="an-tag gold">🏁 LATEST RACE · ${escapeHtml(String(season))} ROUND ${escapeHtml(String(last.round))}</div>
+          <div class="an-title">${escapeHtml(last.raceName)} — Race Report</div>
           <div class="an-body">
-            ${lastW ? `<strong>${driverFullName(lastW.Driver)}</strong> (${lastW.Constructor.name}) claimed victory at <strong>${last.Circuit.circuitName}</strong>.
-            ${lastW.laps ? `The race ran for ${lastW.laps} laps.` : ''}
-            ${lastW.Time ? `Race time: ${lastW.Time.time}.` : ''}` : 'Result data not available.'}
+            ${lastW
+              ? `<strong>${driverFullName(lastW.Driver)}</strong> (${escapeHtml(lastW.Constructor.name)}) claimed victory at <strong>${escapeHtml(last.Circuit.circuitName)}</strong>.
+                 ${lastW.laps ? `The race ran for ${escapeHtml(String(lastW.laps))} laps.` : ''}
+                 ${lastW.Time ? `Race time: ${escapeHtml(lastW.Time.time)}.` : ''}`
+              : 'Result data not available.'}
           </div>
           <div class="an-meta">
-            <span>📍 ${last.Circuit.Location.locality}, ${last.Circuit.Location.country}</span>
+            <span>📍 ${escapeHtml(last.Circuit.Location.locality)}, ${escapeHtml(last.Circuit.Location.country)}</span>
             <span>📅 ${fmtDate(last.date)}</span>
-            <span>🔢 Rd ${last.round} of ${schedule.length}</span>
+            <span>🔢 Rd ${escapeHtml(String(last.round))} of ${schedule.length}</span>
           </div>
         </div>` : ''}
 
@@ -370,27 +440,27 @@ async function loadAnalysisPage(season) {
           <div class="an-title">${driverFullName(leader.Driver)} Leads the Title Fight</div>
           <div class="an-body">
             ${flag(leader.Driver.nationality)} <strong>${driverFullName(leader.Driver)}</strong> leads the ${season} Drivers' Championship
-            with <strong>${leader.points} points</strong> and <strong>${leader.wins} win${leader.wins !== '1' ? 's' : ''}</strong>.
+            with <strong>${escapeHtml(leader.points)} points</strong> and <strong>${escapeHtml(leader.wins)} win${leader.wins !== '1' ? 's' : ''}</strong>.
             ${ds[1] ? `The gap over ${driverFullName(ds[1].Driver)} in P2 is <strong>${(parseFloat(leader.points) - parseFloat(ds[1].points)).toFixed(0)} points</strong>.` : ''}
           </div>
           <div class="an-meta">
-            <span>🏆 ${leader.wins} wins</span>
-            <span>🔢 ${leader.points} pts</span>
+            <span>🏆 ${escapeHtml(leader.wins)} wins</span>
+            <span>🔢 ${escapeHtml(leader.points)} pts</span>
           </div>
         </div>` : ''}
 
         ${cLeader ? `
         <div class="analysis-card">
           <div class="an-tag">🏎 CONSTRUCTORS</div>
-          <div class="an-title">${cLeader.Constructor.name} Lead the Constructors' Title</div>
+          <div class="an-title">${escapeHtml(cLeader.Constructor.name)} Lead the Constructors' Title</div>
           <div class="an-body">
-            <strong>${cLeader.Constructor.name}</strong> top the ${season} Constructors' Championship with
-            <strong>${cLeader.points} points</strong> and <strong>${cLeader.wins} wins</strong>.
-            ${cs[1] ? `They lead <strong>${cs[1].Constructor.name}</strong> by ${(parseFloat(cLeader.points) - parseFloat(cs[1].points)).toFixed(0)} points.` : ''}
+            <strong>${escapeHtml(cLeader.Constructor.name)}</strong> top the ${season} Constructors' Championship with
+            <strong>${escapeHtml(cLeader.points)} points</strong> and <strong>${escapeHtml(cLeader.wins)} wins</strong>.
+            ${cs[1] ? `They lead <strong>${escapeHtml(cs[1].Constructor.name)}</strong> by ${(parseFloat(cLeader.points) - parseFloat(cs[1].points)).toFixed(0)} points.` : ''}
           </div>
           <div class="an-meta">
-            <span>🏆 ${cLeader.wins} wins</span>
-            <span>🔢 ${cLeader.points} pts</span>
+            <span>🏆 ${escapeHtml(cLeader.wins)} wins</span>
+            <span>🔢 ${escapeHtml(cLeader.points)} pts</span>
           </div>
         </div>` : ''}
 
@@ -400,8 +470,8 @@ async function loadAnalysisPage(season) {
           <div class="an-title">${season} By the Numbers</div>
           <div class="an-body">
             <strong>${completed.length}</strong> races completed of ${schedule.length} total.<br><br>
-            🏆 Most wins: <strong>${topWinner[0]}</strong> (${topWinner[1]} wins)<br>
-            🏎 Dominant team: <strong>${topTeam ? topTeam[0] : '—'}</strong> (${topTeam ? topTeam[1] : 0} wins)<br>
+            🏆 Most wins: <strong>${escapeHtml(topWinner[0])}</strong> (${topWinner[1]} wins)<br>
+            🏎 Dominant team: <strong>${topTeam ? escapeHtml(topTeam[0]) : '—'}</strong> (${topTeam ? topTeam[1] : 0} wins)<br>
             🏁 Remaining: <strong>${schedule.length - completed.length}</strong> races to go
           </div>
           <div class="an-meta">
@@ -415,25 +485,28 @@ async function loadAnalysisPage(season) {
           <div class="an-title">${season} — What to Watch</div>
           <div class="an-body">
             The ${season} Formula 1 season features <strong>${schedule.length} races</strong> across the globe.
-            The season kicks off at <strong>${schedule[0]?.Circuit?.Location?.country}</strong> on <strong>${fmtDate(schedule[0]?.date)}</strong>
-            and concludes at <strong>${schedule[schedule.length-1]?.Circuit?.Location?.country}</strong> on <strong>${fmtDate(schedule[schedule.length-1]?.date)}</strong>.
+            The season kicks off at <strong>${escapeHtml(schedule[0]?.Circuit?.Location?.country)}</strong> on <strong>${fmtDate(schedule[0]?.date)}</strong>
+            and concludes at <strong>${escapeHtml(schedule[schedule.length - 1]?.Circuit?.Location?.country)}</strong> on <strong>${fmtDate(schedule[schedule.length - 1]?.date)}</strong>.
             Stay tuned for race-by-race analysis as the season unfolds.
           </div>
           <div class="an-meta">
             <span>🏁 ${schedule.length} races</span>
-            <span>📅 ${fmtDate(schedule[0]?.date)} – ${fmtDate(schedule[schedule.length-1]?.date)}</span>
+            <span>📅 ${fmtDate(schedule[0]?.date)} – ${fmtDate(schedule[schedule.length - 1]?.date)}</span>
           </div>
         </div>` : ''}
       </div>
-    `;
+    `);
   } catch (err) {
-    wrap.innerHTML = '<div style="color:var(--red);padding:32px">⚠ Failed to load analysis. Try again in a moment.</div>';
+    console.error('Analysis page error:', err);
+    setHTML('analysisContent',
+      '<div style="color:var(--red);padding:32px">⚠ Failed to load analysis. Try again in a moment.</div>'
+    );
   }
 }
 
 // ── INIT ──────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   const sel = document.getElementById('globalSeasonSelect');
-  currentSeason = parseInt(sel.value);
-  loadHomePage(currentSeason);
+  AppState.currentSeason = parseInt(sel.value);
+  loadHomePage(AppState.currentSeason);
 });

@@ -9,13 +9,23 @@ const BACKEND = 'https://f1buzz-backend.onrender.com';
 const JOLPICA = 'https://api.jolpi.ca/ergast/f1';
 const OPENF1  = 'https://api.openf1.org/v1';
 
+// ── CONSTANTS ─────────────────────────────────
+const CACHE_EXPIRY_MS       = 5 * 60 * 1000; // 5 minutes
+const API_THROTTLE_DELAY_MS = 300;
+const API_RATE_LIMIT_BATCH  = 5; // throttle every N years in history loop
+
+// ── CACHE WITH EXPIRY ─────────────────────────
 const _cache = {};
+
 async function apiFetch(url) {
-  if (_cache[url]) return _cache[url];
+  const cached = _cache[url];
+  if (cached && (Date.now() - cached.timestamp) < CACHE_EXPIRY_MS) {
+    return cached.data;
+  }
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`API error ${res.status}`);
+  if (!res.ok) throw new Error(`API error ${res.status} for ${url}`);
   const data = await res.json();
-  _cache[url] = data;
+  _cache[url] = { data, timestamp: Date.now() };
   return data;
 }
 
@@ -25,7 +35,9 @@ const API = {
     try {
       const data = await apiFetch(`${BACKEND}/api/schedule/${season}`);
       if (data.success && data.races?.length) return data.races;
-    } catch(e) {}
+    } catch (e) {
+      console.warn('Backend schedule fetch failed, falling back to Jolpica:', e.message);
+    }
     const data = await apiFetch(`${JOLPICA}/${season}/races/?limit=30`);
     return data.MRData.RaceTable.Races;
   },
@@ -34,7 +46,9 @@ const API = {
     try {
       const data = await apiFetch(`${BACKEND}/api/results/${season}`);
       if (data.success && data.races?.length) return data.races;
-    } catch(e) {}
+    } catch (e) {
+      console.warn('Backend results fetch failed, falling back to Jolpica:', e.message);
+    }
     const data = await apiFetch(`${JOLPICA}/${season}/results/1/?limit=30`);
     return data.MRData.RaceTable.Races;
   },
@@ -48,7 +62,9 @@ const API = {
     try {
       const data = await apiFetch(`${BACKEND}/api/standings/drivers/${season}`);
       if (data.success && data.standings?.length) return data.standings;
-    } catch(e) {}
+    } catch (e) {
+      console.warn('Backend driver standings failed, falling back to Jolpica:', e.message);
+    }
     const data = await apiFetch(`${JOLPICA}/${season}/driverStandings/?limit=30`);
     const sl = data.MRData.StandingsTable.StandingsLists;
     return sl.length ? sl[0].DriverStandings : [];
@@ -58,7 +74,9 @@ const API = {
     try {
       const data = await apiFetch(`${BACKEND}/api/standings/constructors/${season}`);
       if (data.success && data.standings?.length) return data.standings;
-    } catch(e) {}
+    } catch (e) {
+      console.warn('Backend constructor standings failed, falling back to Jolpica:', e.message);
+    }
     const data = await apiFetch(`${JOLPICA}/${season}/constructorStandings/?limit=20`);
     const sl = data.MRData.StandingsTable.StandingsLists;
     return sl.length ? sl[0].ConstructorStandings : [];
@@ -80,7 +98,7 @@ const API = {
           if (!positions.length) continue;
           const finalPos = {};
           positions.forEach(p => { finalPos[p.driver_number] = p; });
-          const top3 = Object.values(finalPos).sort((a,b) => a.position - b.position).slice(0,3);
+          const top3 = Object.values(finalPos).sort((a, b) => a.position - b.position).slice(0, 3);
           if (!top3.length) continue;
           const drivers = await apiFetch(`${OPENF1}/drivers?session_key=${session.session_key}`);
           const driverMap = {};
@@ -95,10 +113,15 @@ const API = {
               driver: driverMap[p.driver_number] || { full_name: `#${p.driver_number}`, team_name: '' },
             }))
           });
-        } catch(e) {}
+        } catch (e) {
+          console.warn(`Skipping session ${session.session_key}:`, e.message);
+        }
       }
       return results.reverse();
-    } catch(e) { return []; }
+    } catch (e) {
+      console.warn('OpenF1 fetch failed:', e.message);
+      return [];
+    }
   },
 
   async getChampionHistory() {
@@ -109,8 +132,12 @@ const API = {
         const data = await apiFetch(`${JOLPICA}/${y}/driverStandings/1/?limit=1`);
         const lists = data.MRData.StandingsTable.StandingsLists;
         if (lists.length) results.push(lists[0]);
-      } catch(e) {}
-      if ((currentYear - y) % 5 === 4) await new Promise(r => setTimeout(r, 300));
+      } catch (e) {
+        console.warn(`Failed to fetch champion history for ${y}:`, e.message);
+      }
+      if ((currentYear - y) % API_RATE_LIMIT_BATCH === (API_RATE_LIMIT_BATCH - 1)) {
+        await new Promise(r => setTimeout(r, API_THROTTLE_DELAY_MS));
+      }
     }
     return results;
   },
