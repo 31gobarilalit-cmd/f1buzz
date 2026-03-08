@@ -1,0 +1,784 @@
+/* =============================================
+   F1BUZZ — STYLESHEET
+   Theme: Racing Black / Red / Gold
+   ============================================= */
+
+:root {
+  --black:    #080808;
+  --dark:     #0f0f0f;
+  --card:     #141414;
+  --card2:    #1a1a1a;
+  --border:   #242424;
+  --border2:  #2e2e2e;
+  --red:      #e10600;
+  --red2:     #ff2a1f;
+  --red-glow: rgba(225,6,0,0.25);
+  --gold:     #ffd700;
+  --gold-dim: rgba(255,215,0,0.12);
+  --gold2:    #ffb800;
+  --white:    #f2f2f2;
+  --offwhite: #d8d8d8;
+  --gray:     #777;
+  --gray2:    #999;
+  --green:    #00d472;
+  --silver:   #c0c0c0;
+  --bronze:   #cd7f32;
+
+  /* Team colours */
+  --mclaren:   #ff8000;
+  --mercedes:  #00d2be;
+  --redbull:   #3671c6;
+  --ferrari:   #e8002d;
+  --williams:  #64c4ff;
+  --aston:     #358c75;
+  --alpine:    #0090ff;
+  --haas:      #b6babd;
+  --rb:        #6692ff;
+  --audi:      #f596c8;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: 'Rajdhani', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+select { font-family: inherit; }
+
+/* ── SCROLLBAR ─────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--dark); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── TICKER ────────────────────────────────── */
+.ticker-wrap {
+  background: var(--red);
+  height: 32px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.ticker-inner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  overflow: hidden;
+}
+.ticker-label {
+  background: rgba(0,0,0,0.3);
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 0 14px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ticker-track {
+  white-space: nowrap;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  padding-left: 100%;
+  display: inline-block;
+  animation: ticker-scroll 40s linear infinite;
+}
+@keyframes ticker-scroll {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(-100%, 0); }
+}
+
+/* ── HEADER ────────────────────────────────── */
+header {
+  background: var(--dark);
+  border-bottom: 2px solid var(--red);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 24px var(--red-glow);
+}
+.header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 28px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.logo-icon {
+  width: 38px; height: 38px;
+  background: var(--red);
+  clip-path: polygon(12% 0%, 100% 0%, 88% 100%, 0% 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', monospace;
+  font-weight: 900; font-size: 13px;
+  color: white;
+}
+.logo-text {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900; font-size: 20px;
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, var(--gold), #ffaa00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.logo-text span {
+  background: none;
+  -webkit-text-fill-color: var(--red);
+}
+nav { display: flex; gap: 2px; flex: 1; }
+.nav-link {
+  color: var(--gray);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+.nav-link:hover { color: var(--offwhite); background: rgba(255,255,255,0.05); }
+.nav-link.active { color: var(--gold); background: var(--gold-dim); }
+
+.header-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.season-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px; color: var(--gray);
+  letter-spacing: 1px;
+  font-family: 'Share Tech Mono', monospace;
+}
+.season-pill select {
+  background: none; border: none; color: var(--gold);
+  font-family: 'Orbitron', monospace;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; outline: none;
+}
+.season-pill select option { background: var(--dark); color: var(--white); }
+.live-dot {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--white);
+  background: var(--red);
+  padding: 4px 10px;
+  border-radius: 3px;
+  animation: pulse-badge 2s infinite;
+}
+@keyframes pulse-badge {
+  0%,100% { opacity:1; box-shadow:0 0 0 0 var(--red-glow); }
+  50% { opacity:0.85; box-shadow:0 0 8px 3px var(--red-glow); }
+}
+
+/* ── PAGES ─────────────────────────────────── */
+.page { display: none; animation: fadeUp 0.3s ease forwards; }
+.page.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── HERO ──────────────────────────────────── */
+.hero {
+  background: linear-gradient(140deg, #0d0000 0%, #120808 40%, #0a0a0a 100%);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.hero-bg-lines {
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(225,6,0,0.025) 80px, rgba(225,6,0,0.025) 81px),
+    repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.02) 60px, rgba(255,255,255,0.02) 61px);
+  pointer-events: none;
+}
+.hero-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 48px 28px;
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 48px;
+  align-items: start;
+  position: relative;
+}
+.hero-eyebrow {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; color: var(--red);
+  letter-spacing: 3px; text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.hero-eyebrow::before {
+  content: ''; width: 18px; height: 2px; background: var(--red);
+}
+.hero-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 44px; font-weight: 900;
+  line-height: 1.0;
+  margin-bottom: 6px;
+}
+.hero-title .country { color: var(--gold); }
+.hero-subtitle {
+  font-size: 16px; color: var(--gray2);
+  letter-spacing: 0.5px; margin-bottom: 32px;
+}
+.podium-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+.podium-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.podium-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+.podium-card.p1 { border-top: 3px solid var(--gold); }
+.podium-card.p2 { border-top: 3px solid var(--silver); }
+.podium-card.p3 { border-top: 3px solid var(--bronze); }
+.pod-pos {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px; font-weight: 900;
+  margin-bottom: 4px;
+}
+.pod-pos.p1 { color: var(--gold); }
+.pod-pos.p2 { color: var(--silver); }
+.pod-pos.p3 { color: var(--bronze); }
+.pod-name { font-weight: 700; font-size: 16px; }
+.pod-team { font-size: 12px; color: var(--gray2); margin-top: 2px; }
+.pod-time { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--gray); margin-top: 6px; }
+.podium-loading {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 32px;
+  color: var(--gray);
+}
+
+/* MINI STANDINGS CARD */
+.mini-standings-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--red);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.mini-header {
+  background: var(--dark);
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+}
+.mini-badge {
+  background: var(--red);
+  color: white;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+.mini-row {
+  display: flex; align-items: center;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+  transition: background 0.15s;
+}
+.mini-row:hover { background: rgba(255,255,255,0.03); }
+.mini-row:last-child { border-bottom: none; }
+.mini-pos {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px; font-weight: 700;
+  width: 22px; text-align: center; color: var(--gray);
+}
+.mini-pos.gold { color: var(--gold); }
+.team-bar { width: 4px; height: 26px; border-radius: 2px; flex-shrink: 0; }
+.mini-name { flex: 1; font-size: 13px; font-weight: 600; }
+.mini-pts {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px; font-weight: 700; color: var(--gold);
+}
+
+/* ── NEXT RACE / COUNTDOWN ─────────────────── */
+.section-wrap {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 28px;
+}
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.next-race-card {
+  background: linear-gradient(135deg, #140800, #0d0d0d);
+  border: 1px solid rgba(255,215,0,0.18);
+  border-radius: 10px;
+  padding: 28px;
+}
+.card-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--gold);
+  letter-spacing: 3px; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.next-race-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 22px; font-weight: 700;
+  margin-bottom: 4px;
+}
+.next-race-meta { font-size: 13px; color: var(--gray2); margin-bottom: 24px; }
+.countdown-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.countdown-unit { text-align: center; }
+.cd-num {
+  display: block;
+  font-family: 'Orbitron', monospace;
+  font-size: 30px; font-weight: 900;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 8px 14px;
+  min-width: 60px;
+  line-height: 1;
+}
+.cd-label {
+  display: block;
+  font-size: 10px; color: var(--gray);
+  letter-spacing: 1px; margin-top: 5px;
+}
+.countdown-sep {
+  font-family: 'Orbitron', monospace;
+  font-size: 24px; font-weight: 700;
+  color: var(--gray);
+  padding-bottom: 18px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.stat-tile {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+}
+.st-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px; font-weight: 900;
+  color: var(--gold);
+}
+.st-lbl { font-size: 11px; color: var(--gray); margin-top: 6px; letter-spacing: 0.5px; }
+
+/* ── SECTION HEADER ────────────────────────── */
+.section-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.section-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px; font-weight: 700; letter-spacing: 2px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title::before {
+  content: ''; width: 4px; height: 18px;
+  background: var(--red); border-radius: 2px;
+}
+.see-all-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; color: var(--gold);
+  letter-spacing: 1px;
+  transition: opacity 0.2s;
+}
+.see-all-btn:hover { opacity: 0.7; }
+
+/* RESULTS STRIP */
+.results-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+.result-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 4px solid var(--red);
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+.result-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.rc-round { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--gray); letter-spacing: 1px; margin-bottom: 6px; }
+.rc-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.rc-flag { font-size: 18px; }
+.rc-winner { font-size: 13px; color: var(--offwhite); margin-top: 8px; }
+.rc-winner strong { color: var(--gold); }
+.rc-team { font-size: 11px; color: var(--gray2); }
+
+/* ── PAGE HERO ─────────────────────────────── */
+.page-hero {
+  background: linear-gradient(90deg, #0d0000, #100c00, #0a0a0a);
+  border-bottom: 2px solid var(--border);
+  padding: 40px 28px 32px;
+  max-width: 100%;
+}
+.page-hero-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; color: var(--red);
+  letter-spacing: 3px; margin-bottom: 6px;
+}
+.page-hero-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 36px; font-weight: 900;
+}
+
+/* ── TABLE ─────────────────────────────────── */
+.table-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  overflow-x: auto;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.data-table th {
+  text-align: left;
+  padding: 11px 16px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--gray);
+  letter-spacing: 1.5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--dark);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  vertical-align: middle;
+}
+.data-table tr:hover td { background: rgba(255,255,255,0.02); }
+.data-table tr:last-child td { border-bottom: none; }
+.loading-cell {
+  text-align: center; padding: 40px !important;
+  color: var(--gray);
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px;
+}
+.td-round {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px; color: var(--gray);
+  font-weight: 700;
+}
+.td-race { font-weight: 700; }
+.td-circuit { font-size: 12px; color: var(--gray2); margin-top: 2px; }
+.td-date { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--gray2); white-space: nowrap; }
+.td-driver { font-weight: 700; }
+.td-team { font-size: 11px; color: var(--gray2); margin-top: 1px; }
+
+/* STATUS BADGES */
+.badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 3px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  white-space: nowrap;
+}
+.badge-done     { background: rgba(0,212,114,0.12); color: var(--green); }
+.badge-next     { background: rgba(255,215,0,0.12); color: var(--gold); animation: pulseBadge 2s infinite; }
+.badge-upcoming { background: var(--border); color: var(--gray); }
+@keyframes pulseBadge { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+/* ── STANDINGS ─────────────────────────────── */
+.tabs-bar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+.tab-btn {
+  padding: 11px 20px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700; font-size: 12px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--gray);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--white); }
+.tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.standings-row {
+  display: flex; align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  padding: 14px 18px;
+  gap: 14px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.standings-row:hover {
+  transform: translateX(3px);
+  box-shadow: -3px 0 0 var(--red);
+}
+.srow-pos {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px; font-weight: 900;
+  width: 32px; text-align: center;
+  color: var(--gray);
+}
+.srow-pos.top1 { color: var(--gold); }
+.srow-pos.top2 { color: var(--silver); }
+.srow-pos.top3 { color: var(--bronze); }
+.srow-team-bar { width: 5px; height: 40px; border-radius: 3px; }
+.srow-info { flex: 1; }
+.srow-name { font-weight: 700; font-size: 16px; }
+.srow-sub { font-size: 12px; color: var(--gray2); margin-top: 2px; }
+.srow-pts {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px; font-weight: 700; color: var(--gold);
+}
+.srow-wins {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px; color: var(--gray);
+  text-align: right;
+}
+.srow-wins span { color: var(--red); font-weight: 700; }
+.pts-bar-wrap { width: 120px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.pts-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+
+/* ── HISTORY ───────────────────────────────── */
+.history-search-bar {
+  margin-bottom: 20px;
+}
+.history-search-bar input {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 12px 16px;
+  color: var(--white);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.history-search-bar input::placeholder { color: var(--gray); }
+.history-search-bar input:focus { border-color: var(--gold); }
+.year-champ-badge {
+  display: inline-block;
+  background: rgba(255,215,0,0.12);
+  color: var(--gold);
+  font-family: 'Orbitron', monospace;
+  font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 3px;
+}
+.records-section { margin-top: 40px; }
+.records-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.record-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--red);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+}
+.rec-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 36px; font-weight: 900; color: var(--gold);
+}
+.rec-lbl { font-size: 14px; font-weight: 600; margin-top: 6px; }
+.rec-sub { font-size: 12px; color: var(--gray2); margin-top: 3px; }
+
+/* ── ANALYSIS ──────────────────────────────── */
+.analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.analysis-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--red);
+  border-radius: 8px;
+  padding: 24px;
+  transition: transform 0.2s;
+}
+.analysis-card:hover { transform: translateY(-2px); }
+.analysis-card.featured {
+  grid-column: 1 / -1;
+  border-left-color: var(--gold);
+  background: linear-gradient(135deg, #141000, var(--card));
+}
+.an-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--red);
+  letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.an-tag.gold { color: var(--gold); }
+.an-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px; font-weight: 700;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+.an-body {
+  font-size: 15px; color: var(--offwhite);
+  line-height: 1.75;
+}
+.an-body strong { color: var(--gold); }
+.an-meta {
+  display: flex; gap: 16px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; color: var(--gray);
+}
+
+/* ── SEASON CHAMPION BAR ───────────────────── */
+.season-champion-bar {
+  background: linear-gradient(135deg, #181000, #111);
+  border: 1px solid rgba(255,215,0,0.2);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex; flex-wrap: wrap;
+  gap: 24px; align-items: center;
+}
+.champ-item {}
+.champ-item-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--gray); letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.champ-item-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px; font-weight: 900;
+}
+.champ-divider { width: 1px; height: 50px; background: var(--border); }
+
+/* ── SPINNER ───────────────────────────────── */
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner-center {
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px;
+}
+
+/* ── FOOTER ────────────────────────────────── */
+footer {
+  background: var(--dark);
+  border-top: 1px solid var(--border);
+  padding: 28px;
+  text-align: center;
+  margin-top: 48px;
+}
+.footer-logo {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px; font-weight: 900;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.footer-sub {
+  font-size: 13px; color: var(--gray2);
+  margin-bottom: 4px;
+}
+.footer-sub a { color: var(--gold); }
+.footer-sub a:hover { opacity: 0.7; }
+.footer-legal { font-size: 11px; color: var(--gray); }
+
+/* ── RESPONSIVE ────────────────────────────── */
+@media (max-width: 1024px) {
+  .hero-inner { grid-template-columns: 1fr; }
+  .mini-standings-card { display: none; }
+  .analysis-grid { grid-template-columns: 1fr; }
+  .analysis-card.featured { grid-column: 1; }
+}
+@media (max-width: 768px) {
+  .hero-title { font-size: 30px; }
+  .podium-grid { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+  nav { display: none; }
+  .header-inner { gap: 16px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .records-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── TEAM COLOUR HELPERS ───────────────────── */
+.c-mclaren   { background-color: var(--mclaren); }
+.c-mercedes  { background-color: var(--mercedes); }
+.c-red_bull  { background-color: var(--redbull); }
+.c-ferrari   { background-color: var(--ferrari); }
+.c-williams  { background-color: var(--williams); }
+.c-aston_martin { background-color: var(--aston); }
+.c-alpine    { background-color: var(--alpine); }
+.c-haas      { background-color: var(--haas); }
+.c-rb        { background-color: var(--rb); }
+.c-kick_sauber { background-color: var(--audi); }
+.c-sauber    { background-color: var(--audi); }
+.c-default   { background-color: var(--gray); }
+
+.t-mclaren   { color: var(--mclaren); }
+.t-mercedes  { color: var(--mercedes); }
+.t-red_bull  { color: var(--redbull); }
+.t-ferrari   { color: var(--ferrari); }
+.t-williams  { color: var(--williams); }
+.t-aston_martin { color: var(--aston); }
+.t-alpine    { color: var(--alpine); }
+.t-haas      { color: var(--haas); }
+.t-rb        { color: var(--rb); }
+.t-kick_sauber { color: var(--audi); }
+.t-sauber    { color: var(--audi); }

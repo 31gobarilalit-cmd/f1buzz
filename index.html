@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1BUZZ — Live Formula 1 Hub</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏎</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap" id="ticker">
+    <div class="ticker-inner">
+      <span class="ticker-label">F1BUZZ LIVE</span>
+      <div class="ticker-track" id="tickerTrack">
+        <span>Loading latest F1 news…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <a href="#" class="logo" onclick="showPage('home')">
+        <div class="logo-icon">F1</div>
+        <div class="logo-text">F1<span>BUZZ</span></div>
+      </a>
+      <nav id="mainNav">
+        <a href="#" class="nav-link active" data-page="home">HOME</a>
+        <a href="#" class="nav-link" data-page="season">SEASON</a>
+        <a href="#" class="nav-link" data-page="standings">STANDINGS</a>
+        <a href="#" class="nav-link" data-page="history">HISTORY</a>
+        <a href="#" class="nav-link" data-page="analysis">ANALYSIS</a>
+      </nav>
+      <div class="header-right">
+        <div class="season-pill">
+          <span>SEASON</span>
+          <select id="globalSeasonSelect">
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+          </select>
+        </div>
+        <div class="live-dot" id="liveDot">● LIVE</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGES -->
+  <main id="app">
+
+    <!-- HOME PAGE -->
+    <div id="page-home" class="page active">
+
+      <!-- HERO RACE RESULT -->
+      <section class="hero" id="heroSection">
+        <div class="hero-bg-lines"></div>
+        <div class="hero-inner">
+          <div class="hero-left">
+            <div class="hero-eyebrow" id="heroEyebrow">Loading latest race…</div>
+            <h1 class="hero-title" id="heroTitle">—</h1>
+            <div class="hero-subtitle" id="heroSubtitle">—</div>
+            <div class="podium-grid" id="podiumGrid">
+              <div class="podium-loading">
+                <div class="spinner"></div>
+                <span>Fetching race data…</span>
+              </div>
+            </div>
+          </div>
+          <div class="hero-right">
+            <div class="mini-standings-card">
+              <div class="mini-header">
+                <span id="standingsTitle">DRIVERS' STANDINGS</span>
+                <span class="mini-badge" id="standingsBadge">—</span>
+              </div>
+              <div id="miniStandings"><div class="spinner-center"><div class="spinner"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NEXT RACE -->
+      <section class="section-wrap">
+        <div class="two-col">
+          <div class="next-race-card" id="nextRaceCard">
+            <div class="card-label">NEXT RACE</div>
+            <div class="next-race-name" id="nextRaceName">—</div>
+            <div class="next-race-meta" id="nextRaceMeta">—</div>
+            <div class="countdown-row" id="countdownRow">
+              <div class="countdown-unit"><span class="cd-num" id="cdDays">--</span><span class="cd-label">DAYS</span></div>
+              <div class="countdown-sep">:</div>
+              <div class="countdown-unit"><span class="cd-num" id="cdHours">--</span><span class="cd-label">HRS</span></div>
+              <div class="countdown-sep">:</div>
+              <div class="countdown-unit"><span class="cd-num" id="cdMins">--</span><span class="cd-label">MIN</span></div>
+              <div class="countdown-sep">:</div>
+              <div class="countdown-unit"><span class="cd-num" id="cdSecs">--</span><span class="cd-label">SEC</span></div>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-tile"><div class="st-val" id="statRaces">—</div><div class="st-lbl">Races This Season</div></div>
+            <div class="stat-tile"><div class="st-val" id="statDone">—</div><div class="st-lbl">Completed</div></div>
+            <div class="stat-tile"><div class="st-val" id="statLeader">—</div><div class="st-lbl">Championship Leader</div></div>
+            <div class="stat-tile"><div class="st-val" id="statLeaderPts">—</div><div class="st-lbl">Leader Points</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RECENT RESULTS STRIP -->
+      <section class="section-wrap">
+        <div class="section-hdr">
+          <div class="section-title">RECENT RESULTS</div>
+          <a href="#" class="see-all-btn" onclick="showPage('season')">VIEW FULL CALENDAR →</a>
+        </div>
+        <div class="results-strip" id="recentResults">
+          <div class="spinner-center"><div class="spinner"></div></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- SEASON PAGE -->
+    <div id="page-season" class="page">
+      <div class="page-hero">
+        <div class="page-hero-label">RACE CALENDAR</div>
+        <div class="page-hero-title" id="calendarTitle">2026 SEASON</div>
+      </div>
+      <div class="section-wrap">
+        <div class="season-champion-bar" id="seasonChampBar" style="display:none"></div>
+        <div class="table-card">
+          <table class="data-table" id="calendarTable">
+            <thead>
+              <tr>
+                <th>RD</th>
+                <th>GP</th>
+                <th>CIRCUIT</th>
+                <th>DATE</th>
+                <th>WINNER</th>
+                <th>TEAM</th>
+                <th>LAPS</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="calendarBody">
+              <tr><td colspan="8" class="loading-cell"><div class="spinner"></div> Loading calendar…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- STANDINGS PAGE -->
+    <div id="page-standings" class="page">
+      <div class="page-hero">
+        <div class="page-hero-label">CHAMPIONSHIP STANDINGS</div>
+        <div class="page-hero-title" id="standingsPageTitle">2026 CHAMPIONSHIP</div>
+      </div>
+      <div class="section-wrap">
+        <div class="tabs-bar">
+          <button class="tab-btn active" data-tab="drivers">DRIVERS</button>
+          <button class="tab-btn" data-tab="constructors">CONSTRUCTORS</button>
+        </div>
+        <div id="tab-drivers" class="tab-content active">
+          <div class="standings-table-wrap" id="driverStandingsWrap">
+            <div class="spinner-center"><div class="spinner"></div></div>
+          </div>
+        </div>
+        <div id="tab-constructors" class="tab-content">
+          <div class="standings-table-wrap" id="constructorStandingsWrap">
+            <div class="spinner-center"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div id="page-history" class="page">
+      <div class="page-hero">
+        <div class="page-hero-label">FORMULA 1 HERITAGE</div>
+        <div class="page-hero-title">ALL-TIME CHAMPIONS</div>
+      </div>
+      <div class="section-wrap">
+        <div class="history-search-bar">
+          <input type="text" id="historySearch" placeholder="Search by driver, team or year…" />
+        </div>
+        <div class="table-card">
+          <table class="data-table" id="historyTable">
+            <thead>
+              <tr><th>YEAR</th><th>DRIVER</th><th>NATIONALITY</th><th>TEAM</th><th>WINS</th><th>POINTS</th></tr>
+            </thead>
+            <tbody id="historyBody">
+              <tr><td colspan="6" class="loading-cell"><div class="spinner"></div> Loading champion history…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="records-section">
+          <div class="section-hdr"><div class="section-title">ALL-TIME RECORDS</div></div>
+          <div class="records-grid">
+            <div class="record-card"><div class="rec-val">103</div><div class="rec-lbl">Hamilton Race Wins</div><div class="rec-sub">All-time record</div></div>
+            <div class="record-card"><div class="rec-val">7</div><div class="rec-lbl">Most Championships</div><div class="rec-sub">Hamilton & Schumacher</div></div>
+            <div class="record-card"><div class="rec-val">19</div><div class="rec-lbl">Wins in One Season</div><div class="rec-sub">Verstappen, 2023</div></div>
+            <div class="record-card"><div class="rec-val">104</div><div class="rec-lbl">Pole Positions</div><div class="rec-sub">Hamilton, all-time</div></div>
+            <div class="record-card"><div class="rec-val">16</div><div class="rec-lbl">Constructor Titles</div><div class="rec-sub">Ferrari, all-time</div></div>
+            <div class="record-card"><div class="rec-val">1950</div><div class="rec-lbl">First F1 Season</div><div class="rec-sub">British GP, Silverstone</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYSIS PAGE -->
+    <div id="page-analysis" class="page">
+      <div class="page-hero">
+        <div class="page-hero-label">RACE ANALYSIS & INSIGHT</div>
+        <div class="page-hero-title">THE PADDOCK</div>
+      </div>
+      <div class="section-wrap">
+        <div id="analysisContent">
+          <div class="spinner-center"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="footer-logo">F1BUZZ</div>
+    <div class="footer-sub">Data powered by <a href="https://api.jolpi.ca" target="_blank">Jolpica F1 API</a> · Updates automatically after each race</div>
+    <div class="footer-legal">Not affiliated with Formula One Management · Fan project</div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
