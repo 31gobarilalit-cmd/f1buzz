@@ -10,16 +10,6 @@
 </head>
 <body>
 
-  <!-- TICKER -->
-  <div class="ticker-wrap" id="ticker">
-    <div class="ticker-inner">
-      <span class="ticker-label">F1BUZZ LIVE</span>
-      <div class="ticker-track" id="tickerTrack">
-        <span>Loading latest F1 news…</span>
-      </div>
-    </div>
-  </div>
-
   <!-- HEADER -->
   <header>
     <div class="header-inner">
@@ -48,17 +38,39 @@
           </select>
         </div>
         <div class="live-dot" id="liveDot">● LIVE</div>
+        <div class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
+          <span></span><span></span><span></span>
+        </div>
       </div>
     </div>
   </header>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#" data-page="home" onclick="showPage('home');closeMobileMenu()">🏠 HOME</a>
+    <a href="#" data-page="season" onclick="showPage('season');closeMobileMenu()">📅 SEASON</a>
+    <a href="#" data-page="standings" onclick="showPage('standings');closeMobileMenu()">🏆 STANDINGS</a>
+    <a href="#" data-page="history" onclick="showPage('history');closeMobileMenu()">📖 HISTORY</a>
+    <a href="#" data-page="analysis" onclick="showPage('analysis');closeMobileMenu()">📊 ANALYSIS</a>
+    <div style="padding:14px 24px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--gray);letter-spacing:1px;font-family:'Share Tech Mono',monospace">SEASON</span>
+      <select id="mobileSeasonSelect" style="background:var(--card);border:1px solid var(--border2);color:var(--gold);font-family:'Orbitron',monospace;font-size:13px;font-weight:700;padding:4px 8px;border-radius:4px;outline:none;">
+        <option value="2026">2026</option>
+        <option value="2025">2025</option>
+        <option value="2024">2024</option>
+        <option value="2023">2023</option>
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+        <option value="2020">2020</option>
+      </select>
+    </div>
+  </div>
 
   <!-- PAGES -->
   <main id="app">
 
     <!-- HOME PAGE -->
     <div id="page-home" class="page active">
-
-      <!-- HERO RACE RESULT -->
       <section class="hero" id="heroSection">
         <div class="hero-bg-lines"></div>
         <div class="hero-inner">
@@ -85,7 +97,6 @@
         </div>
       </section>
 
-      <!-- NEXT RACE -->
       <section class="section-wrap">
         <div class="two-col">
           <div class="next-race-card" id="nextRaceCard">
@@ -102,7 +113,6 @@
               <div class="countdown-unit"><span class="cd-num" id="cdSecs">--</span><span class="cd-label">SEC</span></div>
             </div>
           </div>
-
           <div class="stats-grid">
             <div class="stat-tile"><div class="st-val" id="statRaces">—</div><div class="st-lbl">Races This Season</div></div>
             <div class="stat-tile"><div class="st-val" id="statDone">—</div><div class="st-lbl">Completed</div></div>
@@ -112,7 +122,6 @@
         </div>
       </section>
 
-      <!-- RECENT RESULTS STRIP -->
       <section class="section-wrap">
         <div class="section-hdr">
           <div class="section-title">RECENT RESULTS</div>
@@ -136,14 +145,8 @@
           <table class="data-table" id="calendarTable">
             <thead>
               <tr>
-                <th>RD</th>
-                <th>GP</th>
-                <th>CIRCUIT</th>
-                <th>DATE</th>
-                <th>WINNER</th>
-                <th>TEAM</th>
-                <th>LAPS</th>
-                <th>STATUS</th>
+                <th>RD</th><th>GP</th><th>CIRCUIT</th><th>DATE</th>
+                <th>WINNER</th><th>TEAM</th><th>LAPS</th><th>STATUS</th>
               </tr>
             </thead>
             <tbody id="calendarBody">
@@ -166,14 +169,10 @@
           <button class="tab-btn" data-tab="constructors">CONSTRUCTORS</button>
         </div>
         <div id="tab-drivers" class="tab-content active">
-          <div class="standings-table-wrap" id="driverStandingsWrap">
-            <div class="spinner-center"><div class="spinner"></div></div>
-          </div>
+          <div id="driverStandingsWrap"><div class="spinner-center"><div class="spinner"></div></div></div>
         </div>
         <div id="tab-constructors" class="tab-content">
-          <div class="standings-table-wrap" id="constructorStandingsWrap">
-            <div class="spinner-center"><div class="spinner"></div></div>
-          </div>
+          <div id="constructorStandingsWrap"><div class="spinner-center"><div class="spinner"></div></div></div>
         </div>
       </div>
     </div>
@@ -191,10 +190,10 @@
         <div class="table-card">
           <table class="data-table" id="historyTable">
             <thead>
-              <tr><th>YEAR</th><th>DRIVER</th><th>NATIONALITY</th><th>TEAM</th><th>WINS</th><th>POINTS</th></tr>
+              <tr><th>YEAR</th><th>DRIVER</th><th>NAT.</th><th>TEAM</th><th>WINS</th><th>PTS</th></tr>
             </thead>
             <tbody id="historyBody">
-              <tr><td colspan="6" class="loading-cell"><div class="spinner"></div> Loading champion history…</td></tr>
+              <tr><td colspan="6" class="loading-cell"><div class="spinner"></div> Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -219,9 +218,7 @@
         <div class="page-hero-title">THE PADDOCK</div>
       </div>
       <div class="section-wrap">
-        <div id="analysisContent">
-          <div class="spinner-center"><div class="spinner"></div></div>
-        </div>
+        <div id="analysisContent"><div class="spinner-center"><div class="spinner"></div></div></div>
       </div>
     </div>
 
@@ -229,12 +226,38 @@
 
   <footer>
     <div class="footer-logo">F1BUZZ</div>
-    <div class="footer-sub">Data powered by <a href="https://api.jolpi.ca" target="_blank">Jolpica F1 API</a> · Updates automatically after each race</div>
+    <div class="footer-sub">Live data · Updates automatically after each race</div>
     <div class="footer-legal">Not affiliated with Formula One Management · Fan project</div>
   </footer>
 
   <script src="js/api.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobileMenu');
+      const burger = document.getElementById('hamburger');
+      menu.classList.toggle('open');
+      burger.classList.toggle('open');
+    }
+    function closeMobileMenu() {
+      document.getElementById('mobileMenu').classList.remove('open');
+      document.getElementById('hamburger').classList.remove('open');
+    }
+    // Sync mobile season selector with desktop
+    document.getElementById('mobileSeasonSelect').addEventListener('change', function() {
+      document.getElementById('globalSeasonSelect').value = this.value;
+      document.getElementById('globalSeasonSelect').dispatchEvent(new Event('change'));
+      closeMobileMenu();
+    });
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+      const menu = document.getElementById('mobileMenu');
+      const burger = document.getElementById('hamburger');
+      if (!menu.contains(e.target) && !burger.contains(e.target)) {
+        closeMobileMenu();
+      }
+    });
+  </script>
 </body>
 </html>
