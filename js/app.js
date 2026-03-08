@@ -88,34 +88,60 @@ function updateTicker(items) {
 // ── LOAD HOME PAGE ─────────────────────────────
 async function loadHomePage(season) {
   try {
-    // Fetch schedule + results in parallel
-    const [schedule, results, driverStandings] = await Promise.all([
+    // Fetch schedule + jolpica results + openf1 results in parallel
+    const [schedule, jolpikaResults, driverStandings, openF1Results] = await Promise.all([
       API.getSchedule(season),
       API.getResults(season).catch(() => []),
       API.getDriverStandings(season).catch(() => []),
+      API.getRecentResultsOpenF1(season).catch(() => []),
     ]);
 
-    // Hero: last completed race
-    const completedRaces = results.filter(r => raceStatus(r) === 'done');
-    const lastRace = completedRaces[completedRaces.length - 1];
+    // Use OpenF1 results if available, otherwise fall back to Jolpica
+    const hasOpenF1 = openF1Results.length > 0;
 
-    if (lastRace) {
-      const fullResult = await API.getRaceResult(season, lastRace.round);
+    // Hero: use OpenF1 most recent race if available
+    if (hasOpenF1) {
+      const last = openF1Results[0]; // newest first
+      const winner = last.top3[0]?.driver;
       document.getElementById('heroEyebrow').textContent =
-        `ROUND ${lastRace.round} · ${season} FORMULA ONE WORLD CHAMPIONSHIP`;
+        `${season} FORMULA ONE WORLD CHAMPIONSHIP`;
       document.getElementById('heroTitle').innerHTML =
-        `<span class="country">${countryFlag(lastRace.Circuit.Location.country)}</span> ${lastRace.raceName.replace(' Grand Prix','')}<br>GRAND PRIX`;
+        `<span class="country">${countryFlag(last.country)}</span> ${last.meeting_name.replace(' Grand Prix','')}<br>GRAND PRIX`;
       document.getElementById('heroSubtitle').textContent =
-        `${lastRace.Circuit.circuitName}, ${lastRace.Circuit.Location.locality} · ${fmtDate(lastRace.date)}`;
-      document.getElementById('podiumGrid').innerHTML = renderPodium(fullResult);
+        `${last.country} · ${fmtDate(last.date.split('T')[0])}`;
+      document.getElementById('podiumGrid').innerHTML = last.top3.map((r, i) => {
+        const positions = ['p1','p2','p3'];
+        const trophies = ['🥇','🥈','🥉'];
+        const color = r.driver.team_colour ? `#${r.driver.team_colour}` : '#888';
+        return `
+          <div class="podium-card ${positions[i]}">
+            <div class="pod-pos ${positions[i]}">${trophies[i]}</div>
+            <div class="pod-name">${r.driver.full_name || '—'}</div>
+            <div class="pod-team" style="color:${color}">${r.driver.team_name || '—'}</div>
+          </div>`;
+      }).join('');
     } else {
-      document.getElementById('heroEyebrow').textContent = `${season} SEASON`;
-      document.getElementById('heroTitle').textContent = 'Season Upcoming';
-      document.getElementById('heroSubtitle').textContent = 'No races completed yet';
-      document.getElementById('podiumGrid').innerHTML = '<div class="podium-loading"><span>Season has not started yet</span></div>';
+      // Fall back to Jolpica
+      const completedRaces = jolpikaResults.filter(r => raceStatus(r) === 'done');
+      const lastRace = completedRaces[completedRaces.length - 1];
+      if (lastRace) {
+        const fullResult = await API.getRaceResult(season, lastRace.round);
+        document.getElementById('heroEyebrow').textContent =
+          `ROUND ${lastRace.round} · ${season} FORMULA ONE WORLD CHAMPIONSHIP`;
+        document.getElementById('heroTitle').innerHTML =
+          `<span class="country">${countryFlag(lastRace.Circuit.Location.country)}</span> ${lastRace.raceName.replace(' Grand Prix','')}<br>GRAND PRIX`;
+        document.getElementById('heroSubtitle').textContent =
+          `${lastRace.Circuit.circuitName}, ${lastRace.Circuit.Location.locality} · ${fmtDate(lastRace.date)}`;
+        document.getElementById('podiumGrid').innerHTML = renderPodium(fullResult);
+      } else {
+        document.getElementById('heroEyebrow').textContent = `${season} SEASON`;
+        document.getElementById('heroTitle').textContent = 'Season Upcoming';
+        document.getElementById('heroSubtitle').textContent = 'No races completed yet';
+        document.getElementById('podiumGrid').innerHTML = '<div class="podium-loading"><span>Season has not started yet</span></div>';
+      }
     }
 
-    // Mini standings
+    // Mini standings (still from Jolpica)
     document.getElementById('miniStandings').innerHTML = renderMiniStandings(driverStandings);
     document.getElementById('standingsBadge').textContent = `R${driverStandings[0]?.round || '—'}`;
 
@@ -133,28 +159,43 @@ async function loadHomePage(season) {
 
     // Season stats
     document.getElementById('statRaces').textContent = schedule.length;
-    document.getElementById('statDone').textContent = completedRaces.length;
+    const completedCount = hasOpenF1 ? openF1Results.length : jolpikaResults.filter(r => raceStatus(r) === 'done').length;
+    document.getElementById('statDone').textContent = completedCount;
     const leader = driverStandings[0];
     if (leader) {
-      document.getElementById('statLeader').textContent =
-        `${leader.Driver.code || leader.Driver.familyName}`;
+      document.getElementById('statLeader').textContent = leader.Driver.code || leader.Driver.familyName;
       document.getElementById('statLeaderPts').textContent = leader.points + ' pts';
     }
 
-    // Recent results strip
-    if (results.length) {
-      document.getElementById('recentResults').innerHTML = renderResultCards(results);
+    // Recent results strip — prefer OpenF1
+    if (hasOpenF1) {
+      document.getElementById('recentResults').innerHTML = openF1Results.slice(0, 6).map(race => {
+        const w = race.top3[0];
+        const color = w?.driver?.team_colour ? `#${w.driver.team_colour}` : 'var(--red)';
+        return `
+          <div class="result-card" style="border-left-color:${color}">
+            <div class="rc-round">${fmtDate(race.date.split('T')[0])}</div>
+            <div class="rc-flag">${countryFlag(race.country)}</div>
+            <div class="rc-name">${race.meeting_name.replace(' Grand Prix',' GP')}</div>
+            <div class="rc-winner">🏆 <strong>${w?.driver?.full_name || '—'}</strong></div>
+            <div class="rc-team" style="color:${color}">${w?.driver?.team_name || '—'}</div>
+          </div>`;
+      }).join('');
+    } else if (jolpikaResults.length) {
+      document.getElementById('recentResults').innerHTML = renderResultCards(jolpikaResults);
     } else {
       document.getElementById('recentResults').innerHTML =
         '<div style="color:var(--gray);padding:32px">No results yet this season.</div>';
     }
 
     // Ticker
-    const tickerItems = results.slice(-5).reverse().map(r => {
+    const tickerItems = (hasOpenF1 ? openF1Results : jolpikaResults).slice(0, 5).map(r => {
+      if (hasOpenF1) {
+        const w = r.top3[0];
+        return `${r.meeting_name}: ${w?.driver?.full_name || '—'} (${w?.driver?.team_name || '—'}) wins`;
+      }
       const w = r.Results?.[0];
-      return w
-        ? `${r.raceName}: ${driverFullName(w.Driver)} (${w.Constructor.name}) wins`
-        : r.raceName;
+      return w ? `${r.raceName}: ${driverFullName(w.Driver)} (${w.Constructor.name}) wins` : r.raceName;
     });
     if (leader) tickerItems.unshift(`Championship leader: ${driverFullName(leader.Driver)} — ${leader.points} pts`);
     updateTicker(tickerItems);
@@ -162,7 +203,7 @@ async function loadHomePage(season) {
   } catch (err) {
     console.error('Home load error:', err);
     document.getElementById('podiumGrid').innerHTML =
-      `<div class="podium-loading"><span style="color:var(--red)">⚠ Could not load data. API may be rate-limited. Try again shortly.</span></div>`;
+      `<div class="podium-loading"><span style="color:var(--red)">⚠ Could not load data. Try again shortly.</span></div>`;
   }
 }
 
@@ -392,10 +433,7 @@ async function loadAnalysisPage(season) {
 
 // ── INIT ──────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  // Set default season to current year
   const sel = document.getElementById('globalSeasonSelect');
   currentSeason = parseInt(sel.value);
-
-  // Load home
   loadHomePage(currentSeason);
 });

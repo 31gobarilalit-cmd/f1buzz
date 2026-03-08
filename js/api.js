@@ -1,77 +1,117 @@
 /* =============================================
    F1BUZZ — API MODULE
-   Jolpica F1 API: https://api.jolpi.ca/ergast/f1/
+   Primary: F1BUZZ Backend (scraper)
+   Fallback: Jolpica + OpenF1
    ============================================= */
 
-const BASE = 'https://api.jolpi.ca/ergast/f1';
+// !! Replace this with your Render.com URL after deploying !!
+const BACKEND = 'https://f1buzz-backend.onrender.com';
+const JOLPICA = 'https://api.jolpi.ca/ergast/f1';
+const OPENF1  = 'https://api.openf1.org/v1';
 
-// Simple in-memory cache to avoid hitting rate limits (200 req/hr)
 const _cache = {};
 async function apiFetch(url) {
   if (_cache[url]) return _cache[url];
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`API error ${res.status}: ${url}`);
+  if (!res.ok) throw new Error(`API error ${res.status}`);
   const data = await res.json();
   _cache[url] = data;
   return data;
 }
 
 const API = {
-  // ── SCHEDULE ──────────────────────────────
+
   async getSchedule(season) {
-    const data = await apiFetch(`${BASE}/${season}/races/?limit=30`);
+    try {
+      const data = await apiFetch(`${BACKEND}/api/schedule/${season}`);
+      if (data.success && data.races?.length) return data.races;
+    } catch(e) {}
+    const data = await apiFetch(`${JOLPICA}/${season}/races/?limit=30`);
     return data.MRData.RaceTable.Races;
   },
 
-  // ── RESULTS for a season ──────────────────
   async getResults(season) {
-    const data = await apiFetch(`${BASE}/${season}/results/1/?limit=30`);
-    return data.MRData.RaceTable.Races; // P1 finisher per race
+    try {
+      const data = await apiFetch(`${BACKEND}/api/results/${season}`);
+      if (data.success && data.races?.length) return data.races;
+    } catch(e) {}
+    const data = await apiFetch(`${JOLPICA}/${season}/results/1/?limit=30`);
+    return data.MRData.RaceTable.Races;
   },
 
-  // ── SPECIFIC RACE RESULT ──────────────────
   async getRaceResult(season, round) {
-    const data = await apiFetch(`${BASE}/${season}/${round}/results/?limit=5`);
+    const data = await apiFetch(`${JOLPICA}/${season}/${round}/results/?limit=5`);
     return data.MRData.RaceTable.Races[0];
   },
 
-  // ── DRIVER STANDINGS ─────────────────────
   async getDriverStandings(season) {
-    const data = await apiFetch(`${BASE}/${season}/driverStandings/?limit=30`);
+    try {
+      const data = await apiFetch(`${BACKEND}/api/standings/drivers/${season}`);
+      if (data.success && data.standings?.length) return data.standings;
+    } catch(e) {}
+    const data = await apiFetch(`${JOLPICA}/${season}/driverStandings/?limit=30`);
     const sl = data.MRData.StandingsTable.StandingsLists;
     return sl.length ? sl[0].DriverStandings : [];
   },
 
-  // ── CONSTRUCTOR STANDINGS ─────────────────
   async getConstructorStandings(season) {
-    const data = await apiFetch(`${BASE}/${season}/constructorStandings/?limit=20`);
+    try {
+      const data = await apiFetch(`${BACKEND}/api/standings/constructors/${season}`);
+      if (data.success && data.standings?.length) return data.standings;
+    } catch(e) {}
+    const data = await apiFetch(`${JOLPICA}/${season}/constructorStandings/?limit=20`);
     const sl = data.MRData.StandingsTable.StandingsLists;
     return sl.length ? sl[0].ConstructorStandings : [];
   },
 
-  // ── CHAMPION HISTORY ─────────────────────
-  async getChampionHistory() {
-    // Fetch champions year by year from 1950 to current season
-    const currentYear = new Date().getFullYear();
-    const years = [];
-    for (let y = currentYear; y >= 2000; y--) years.push(y); // 2000–now for performance
-
-    const results = await Promise.allSettled(
-      years.map(y => apiFetch(`${BASE}/${y}/driverStandings/1/?limit=1`))
-    );
-
-    return results
-      .filter(r => r.status === 'fulfilled')
-      .map(r => {
-        const lists = r.value.MRData.StandingsTable.StandingsLists;
-        return lists.length ? lists[0] : null;
-      })
-      .filter(Boolean);
+  async getRecentResultsOpenF1(year) {
+    try {
+      const sessions = await apiFetch(`${OPENF1}/sessions?session_type=Race&year=${year}`);
+      if (!sessions.length) return [];
+      const meetings = await apiFetch(`${OPENF1}/meetings?year=${year}`);
+      const meetingMap = {};
+      meetings.forEach(m => { meetingMap[m.meeting_key] = m; });
+      const results = [];
+      for (const session of sessions) {
+        const sessionEnd = new Date(session.date_end);
+        if (sessionEnd > new Date()) continue;
+        try {
+          const positions = await apiFetch(`${OPENF1}/position?session_key=${session.session_key}`);
+          if (!positions.length) continue;
+          const finalPos = {};
+          positions.forEach(p => { finalPos[p.driver_number] = p; });
+          const top3 = Object.values(finalPos).sort((a,b) => a.position - b.position).slice(0,3);
+          if (!top3.length) continue;
+          const drivers = await apiFetch(`${OPENF1}/drivers?session_key=${session.session_key}`);
+          const driverMap = {};
+          drivers.forEach(d => { driverMap[d.driver_number] = d; });
+          const meeting = meetingMap[session.meeting_key] || {};
+          results.push({
+            meeting_name: meeting.meeting_name || session.session_name,
+            country: meeting.country_name || '',
+            date: session.date_start,
+            top3: top3.map(p => ({
+              position: p.position,
+              driver: driverMap[p.driver_number] || { full_name: `#${p.driver_number}`, team_name: '' },
+            }))
+          });
+        } catch(e) {}
+      }
+      return results.reverse();
+    } catch(e) { return []; }
   },
 
-  // ── SEASON LIST ───────────────────────────
-  async getSeasons() {
-    const data = await apiFetch(`${BASE}/seasons/?limit=80`);
-    return data.MRData.SeasonTable.Seasons.reverse();
+  async getChampionHistory() {
+    const currentYear = new Date().getFullYear();
+    const results = [];
+    for (let y = currentYear; y >= 2000; y--) {
+      try {
+        const data = await apiFetch(`${JOLPICA}/${y}/driverStandings/1/?limit=1`);
+        const lists = data.MRData.StandingsTable.StandingsLists;
+        if (lists.length) results.push(lists[0]);
+      } catch(e) {}
+      if ((currentYear - y) % 5 === 4) await new Promise(r => setTimeout(r, 300));
+    }
+    return results;
   },
 };
