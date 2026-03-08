@@ -1,5 +1,5 @@
-/* =============================================
-   F1BUZZ — STYLESHEET
+﻿/* =============================================
+   F1BUZZ â€” STYLESHEET
    Theme: Racing Black / Red / Gold
    ============================================= */
 
@@ -52,14 +52,14 @@ a { text-decoration: none; color: inherit; }
 button { cursor: pointer; font-family: inherit; border: none; background: none; }
 select { font-family: inherit; }
 
-/* ── SCROLLBAR ─────────────────────────────── */
+/* â”€â”€ SCROLLBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--dark); }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
 /* ticker removed */
 
-/* ── HEADER ────────────────────────────────── */
+/* â”€â”€ HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 header {
   background: var(--dark);
   border-bottom: 2px solid var(--red);
@@ -158,7 +158,7 @@ nav { display: flex; gap: 2px; flex: 1; }
   50% { opacity:0.85; box-shadow:0 0 8px 3px var(--red-glow); }
 }
 
-/* ── PAGES ─────────────────────────────────── */
+/* â”€â”€ PAGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .page { display: none; animation: fadeUp 0.3s ease forwards; }
 .page.active { display: block; }
 @keyframes fadeUp {
@@ -166,7 +166,7 @@ nav { display: flex; gap: 2px; flex: 1; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── HERO ──────────────────────────────────── */
+/* â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .hero {
   background: linear-gradient(140deg, #0d0000 0%, #120808 40%, #0a0a0a 100%);
   border-bottom: 1px solid var(--border);
@@ -178,7 +178,7 @@ nav { display: flex; gap: 2px; flex: 1; }
   background:
     repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(225,6,0,0.025) 80px, rgba(225,6,0,0.025) 81px),
     repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.02) 60px, rgba(255,255,255,0.02) 61px);
-  pointer-events: none;
+  pointer-events: auto;
 }
 .hero-inner {
   max-width: 1440px;
@@ -293,7 +293,7 @@ nav { display: flex; gap: 2px; flex: 1; }
   font-size: 12px; font-weight: 700; color: var(--gold);
 }
 
-/* ── NEXT RACE / COUNTDOWN ─────────────────── */
+/* â”€â”€ NEXT RACE / COUNTDOWN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .section-wrap {
   max-width: 1440px;
   margin: 0 auto;
@@ -368,7 +368,7 @@ nav { display: flex; gap: 2px; flex: 1; }
 }
 .st-lbl { font-size: 11px; color: var(--gray); margin-top: 6px; letter-spacing: 0.5px; }
 
-/* ── SECTION HEADER ────────────────────────── */
+/* â”€â”€ SECTION HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .section-hdr {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 18px;
@@ -412,7 +412,7 @@ nav { display: flex; gap: 2px; flex: 1; }
 .rc-winner strong { color: var(--gold); }
 .rc-team { font-size: 11px; color: var(--gray2); }
 
-/* ── PAGE HERO ─────────────────────────────── */
+/* â”€â”€ PAGE HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .page-hero {
   background: linear-gradient(90deg, #0d0000, #100c00, #0a0a0a);
   border-bottom: 2px solid var(--border);
@@ -429,7 +429,7 @@ nav { display: flex; gap: 2px; flex: 1; }
   font-size: 36px; font-weight: 900;
 }
 
-/* ── TABLE ─────────────────────────────────── */
+/* â”€â”€ TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .table-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -490,7 +490,7 @@ nav { display: flex; gap: 2px; flex: 1; }
 .badge-upcoming { background: var(--border); color: var(--gray); }
 @keyframes pulseBadge { 0%,100%{opacity:1} 50%{opacity:0.5} }
 
-/* ── STANDINGS ─────────────────────────────── */
+/* â”€â”€ STANDINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .tabs-bar {
   display: flex;
   gap: 4px;
@@ -552,7 +552,7 @@ nav { display: flex; gap: 2px; flex: 1; }
 .pts-bar-wrap { width: 120px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
 .pts-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
 
-/* ── HISTORY ───────────────────────────────── */
+/* â”€â”€ HISTORY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .history-search-bar {
   margin-bottom: 20px;
 }
@@ -600,7 +600,7 @@ nav { display: flex; gap: 2px; flex: 1; }
 .rec-lbl { font-size: 14px; font-weight: 600; margin-top: 6px; }
 .rec-sub { font-size: 12px; color: var(--gray2); margin-top: 3px; }
 
-/* ── ANALYSIS ──────────────────────────────── */
+/* â”€â”€ ANALYSIS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .analysis-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -647,7 +647,7 @@ nav { display: flex; gap: 2px; flex: 1; }
   font-size: 11px; color: var(--gray);
 }
 
-/* ── SEASON CHAMPION BAR ───────────────────── */
+/* â”€â”€ SEASON CHAMPION BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .season-champion-bar {
   background: linear-gradient(135deg, #181000, #111);
   border: 1px solid rgba(255,215,0,0.2);
@@ -669,7 +669,7 @@ nav { display: flex; gap: 2px; flex: 1; }
 }
 .champ-divider { width: 1px; height: 50px; background: var(--border); }
 
-/* ── SPINNER ───────────────────────────────── */
+/* â”€â”€ SPINNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .spinner {
   width: 20px; height: 20px;
   border: 2px solid var(--border2);
@@ -684,7 +684,7 @@ nav { display: flex; gap: 2px; flex: 1; }
   padding: 48px;
 }
 
-/* ── FOOTER ────────────────────────────────── */
+/* â”€â”€ FOOTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 footer {
   background: var(--dark);
   border-top: 1px solid var(--border);
@@ -706,7 +706,7 @@ footer {
 .footer-sub a:hover { opacity: 0.7; }
 .footer-legal { font-size: 11px; color: var(--gray); }
 
-/* ── HAMBURGER MENU ────────────────────────── */
+/* â”€â”€ HAMBURGER MENU â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .hamburger {
   display: none;
   flex-direction: column;
@@ -755,7 +755,7 @@ footer {
   padding-left: 32px;
 }
 
-/* ── TABLET ────────────────────────────────── */
+/* â”€â”€ TABLET â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 1024px) {
   .hero-inner { grid-template-columns: 1fr; }
   .mini-standings-card { display: none; }
@@ -764,7 +764,7 @@ footer {
   .two-col { grid-template-columns: 1fr; }
 }
 
-/* ── MOBILE ────────────────────────────────── */
+/* â”€â”€ MOBILE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 768px) {
 
   /* Header */
@@ -844,7 +844,7 @@ footer {
   .footer-sub { font-size: 11px; }
 }
 
-/* ── SMALL MOBILE ──────────────────────────── */
+/* â”€â”€ SMALL MOBILE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 400px) {
   .hero-title { font-size: 22px; }
   .results-strip { grid-template-columns: 1fr; }
@@ -854,7 +854,7 @@ footer {
   .podium-grid { grid-template-columns: 1fr 1fr 1fr; }
 }
 
-/* ── TEAM COLOUR HELPERS ───────────────────── */
+/* â”€â”€ TEAM COLOUR HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .c-mclaren   { background-color: var(--mclaren); }
 .c-mercedes  { background-color: var(--mercedes); }
 .c-red_bull  { background-color: var(--redbull); }
@@ -880,7 +880,7 @@ footer {
 .t-kick_sauber { color: var(--audi); }
 .t-sauber    { color: var(--audi); }
 
-/* ── PAGINATION ───────────────────────────────── */
+/* â”€â”€ PAGINATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pagination-row {
   display: flex;
   justify-content: center;
@@ -906,3 +906,146 @@ footer {
   border-color: var(--red);
   color: #fff;
 }
+
+.intro-video-section {
+  padding-top: 28px;
+}
+
+.intro-video-card {
+  display: grid;
+  grid-template-columns: minmax(240px, 360px) minmax(0, 1fr);
+  gap: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 215, 0, 0.08), transparent 35%),
+    linear-gradient(135deg, rgba(225, 6, 0, 0.08), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.intro-video-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.intro-video-kicker {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--red);
+}
+
+.intro-video-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.05;
+  color: var(--white);
+}
+
+.intro-video-text {
+  color: var(--gray2);
+  font-size: 16px;
+  line-height: 1.5;
+  max-width: 34ch;
+}
+
+.intro-video-shell {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(135deg, rgba(225, 6, 0, 0.12), rgba(255, 215, 0, 0.08)),
+    #090909;
+}
+
+.intro-video-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.intro-video-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: auto;
+  text-align: center;
+  padding: 24px;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.5)),
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.03),
+      rgba(255, 255, 255, 0.03) 16px,
+      transparent 16px,
+      transparent 32px
+    );
+}
+
+.intro-video-placeholder-badge {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  background: rgba(255, 215, 0, 0.08);
+}
+
+.intro-video-placeholder-text {
+  color: var(--offwhite);
+  font-size: 15px;
+  max-width: 28ch;
+}
+
+@media (max-width: 980px) {
+  .intro-video-card {
+    grid-template-columns: 1fr;
+  }
+
+  .intro-video-text {
+    max-width: none;
+  }
+}
+
+
+.intro-video-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  background: rgba(225, 6, 0, 0.22);
+  color: var(--white);
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.intro-video-link:hover {
+  background: rgba(225, 6, 0, 0.35);
+  border-color: rgba(255, 215, 0, 0.55);
+}
+
+
+
+.intro-video-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
