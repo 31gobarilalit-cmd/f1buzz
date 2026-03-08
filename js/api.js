@@ -141,4 +141,62 @@ const API = {
     }
     return results;
   },
+
+  async getNews() {
+    // Use Anthropic API with web_search to get latest F1 news headlines
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+          system: 'You fetch F1 news. Always respond with ONLY a JSON array, no markdown, no extra text.',
+          messages: [{
+            role: 'user',
+            content: `Search for the 6 most recent Formula 1 news headlines from today or this week.
+Return ONLY a raw JSON array like this (no markdown, no backticks):
+[
+  {"title":"headline here","source":"Autosport","link":"https://...","pub":"2026-03-08"},
+  ...
+]
+Keep titles concise, under 100 chars. Only real news, no duplicates.`
+          }]
+        })
+      });
+
+      const data = await response.json();
+
+      // Extract text from response content blocks
+      const text = data.content
+        ?.filter(b => b.type === 'text')
+        ?.map(b => b.text)
+        ?.join('') || '';
+
+      // Parse JSON from response
+      const clean = text.replace(/```json|```/g, '').trim();
+      const start = clean.indexOf('[');
+      const end   = clean.lastIndexOf(']');
+      if (start === -1 || end === -1) throw new Error('No JSON array found');
+
+      const items = JSON.parse(clean.slice(start, end + 1));
+      if (Array.isArray(items) && items.length) {
+        console.log(`News loaded via AI search: ${items.length} items`);
+        return items;
+      }
+    } catch (e) {
+      console.warn('AI news fetch failed:', e.message);
+    }
+
+    // Fallback: backend RSS scraper
+    try {
+      const data = await apiFetch(`${BACKEND}/api/news`);
+      if (data.success && data.items?.length) return data.items;
+    } catch (e) {
+      console.warn('Backend news also failed:', e.message);
+    }
+
+    return [];
+  },
 };

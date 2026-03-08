@@ -74,7 +74,6 @@
       <section class="hero" id="heroSection">
         <div class="hero-bg-lines"></div>
         <div class="hero-inner">
-          <!-- LEFT: race result + video -->
           <div class="hero-left">
             <div class="hero-eyebrow" id="heroEyebrow">Loading latest race...</div>
             <h1 class="hero-title" id="heroTitle">-</h1>
@@ -85,11 +84,9 @@
                 <span>Fetching race data...</span>
               </div>
             </div>
-            <!-- VIDEO sits here, flush below podium, aligned with standings -->
+            <!-- VIDEO: below podium, fills empty space alongside standings+news -->
             <div class="hero-video-wrap">
-              <div class="hero-video-label">
-                <span class="hero-video-kicker">TURN IT UP · STARTING GRID</span>
-              </div>
+              <span class="hero-video-kicker">TURN IT UP · STARTING GRID</span>
               <div class="intro-video-shell">
                 <video
                   class="intro-video-frame"
@@ -98,15 +95,14 @@
                   controls
                   playsinline
                   loop
-                  preload="metadata"
+                  preload="auto"
                 >
-                  <source src="video/F1_Opening_Titles_2026.mp4" type="video/mp4" />
+                  <source src="F1%20Opening%20Titles%202026.mp4" type="video/mp4" />
                   Your browser does not support the intro video.
                 </video>
               </div>
             </div>
           </div>
-          <!-- RIGHT: standings card -->
           <div class="hero-right">
             <div class="mini-standings-card">
               <div class="mini-header">
@@ -114,6 +110,14 @@
                 <span class="mini-badge" id="standingsBadge">-</span>
               </div>
               <div id="miniStandings"><div class="spinner-center"><div class="spinner"></div></div></div>
+            </div>
+            <!-- NEWS CARD -->
+            <div class="mini-news-card">
+              <div class="mini-header">
+                <span>F1 NEWS</span>
+                <span class="mini-badge" id="newsBadge">LIVE</span>
+              </div>
+              <div id="miniNews"><div class="spinner-center"><div class="spinner"></div></div></div>
             </div>
           </div>
         </div>

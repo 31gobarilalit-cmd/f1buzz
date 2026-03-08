@@ -318,3 +318,32 @@ function renderResultCards(raceResults) {
     `;
   }).join('');
 }
+
+// ── MINI NEWS ─────────────────────────────────
+function renderMiniNews(items) {
+  if (!items.length) return '<div style="padding:14px;color:var(--gray);font-size:12px;text-align:center">No news available</div>';
+  return items.map(item => {
+    const ago = timeAgo(item.pub);
+    return `
+      <a class="news-row" href="${escapeHtml(item.link || '#')}" target="_blank" rel="noopener noreferrer">
+        <div class="news-title">${escapeHtml(item.title)}</div>
+        <div class="news-meta">
+          <span class="news-source">${escapeHtml(item.source)}</span>
+          <span class="news-ago">${ago}</span>
+        </div>
+      </a>
+    `;
+  }).join('');
+}
+
+function timeAgo(pubDateStr) {
+  if (!pubDateStr) return '';
+  const diff = Date.now() - new Date(pubDateStr).getTime();
+  const mins  = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days  = Math.floor(diff / 86400000);
+  if (mins < 2)   return 'just now';
+  if (mins < 60)  return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
+}

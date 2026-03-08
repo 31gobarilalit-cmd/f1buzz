@@ -177,6 +177,7 @@ async function scrapeConstructorStandings(year) {
   const $ = await fetchPage(url);
 
   const standings = [];
+  let foundDriverTable = false;
 
   $('table.wikitable').each((i, table) => {
     const headers = [];
@@ -311,6 +312,76 @@ app.get('/api/season/:year', async (req, res) => {
       updatedAt: new Date().toISOString(),
     });
   } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── SCRAPE: F1 NEWS FROM RSS ──────────────────
+async function scrapeF1News() {
+  const cacheKey = 'f1_news';
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+
+  const RSS_SOURCES = [
+    { name: 'Autosport',    url: 'https://www.autosport.com/rss/f1/news' },
+    { name: 'Motorsport',   url: 'https://www.motorsport.com/rss/f1/news' },
+    { name: 'BBC Sport',    url: 'https://feeds.bbci.co.uk/sport/formula1/rss.xml' },
+    { name: 'Crash.net',    url: 'https://www.crash.net/rss/f1' },
+    { name: 'GPFans',       url: 'https://www.gpfans.com/en/rss/' },
+  ];
+
+  for (const source of RSS_SOURCES) {
+    try {
+      const res = await axios.get(source.url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+        timeout: 8000,
+      });
+
+      const $ = cheerio.load(res.data, { xmlMode: true });
+      const items = [];
+
+      $('item').each((i, el) => {
+        if (i >= 8) return false;
+        const title = cleanText($(el).find('title').first().text());
+        // link can be in <link> text or <guid> or <enclosure url>
+        let link = cleanText($(el).find('link').first().text());
+        if (!link) link = cleanText($(el).find('guid').first().text());
+        const pub  = cleanText($(el).find('pubDate').first().text());
+        const desc = cleanText(
+          $(el).find('description').first().text()
+            .replace(/<[^>]*>/g, '')
+        ).slice(0, 160);
+
+        if (title && title.length > 10) {
+          items.push({ title, link, pub, desc, source: source.name });
+        }
+      });
+
+      if (items.length >= 3) {
+        console.log(`News loaded from ${source.name}: ${items.length} items`);
+        const result = { items, source: source.name, updatedAt: new Date().toISOString() };
+        cache.set(cacheKey, result, 900);
+        return result;
+      }
+    } catch (e) {
+      console.warn(`News fetch failed for ${source.name}:`, e.message);
+    }
+  }
+
+  return { items: [], source: null, updatedAt: new Date().toISOString() };
+}
+
+// F1 News
+app.get('/api/news', async (req, res) => {
+  try {
+    const data = await scrapeF1News();
+    res.json({ success: true, ...data });
+  } catch (err) {
+    console.error('News error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });

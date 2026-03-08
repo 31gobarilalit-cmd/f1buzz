@@ -123,11 +123,12 @@ function updateTicker(items) {
 // ── LOAD HOME PAGE ─────────────────────────────
 async function loadHomePage(season) {
   try {
-    const [schedule, jolpikaResults, driverStandings, openF1Results] = await Promise.all([
+    const [schedule, jolpikaResults, driverStandings, openF1Results, newsItems] = await Promise.all([
       API.getSchedule(season),
       API.getResults(season).catch(() => []),
       API.getDriverStandings(season).catch(() => []),
       API.getRecentResultsOpenF1(season).catch(() => []),
+      API.getNews().catch(() => []),
     ]);
 
     const hasOpenF1 = openF1Results.length > 0;
@@ -193,6 +194,9 @@ async function loadHomePage(season) {
     // Mini standings
     setHTML('miniStandings', renderMiniStandings(driverStandings));
     setText('standingsBadge', `R${driverStandings[0]?.round || '—'}`);
+
+    // News
+    setHTML('miniNews', renderMiniNews(newsItems));
 
     // Next race + countdown
     const nextRace = findNextRace(schedule);
