@@ -123,15 +123,18 @@ function updateTicker(items) {
 // ── LOAD HOME PAGE ─────────────────────────────
 async function loadHomePage(season) {
   try {
-    const [schedule, jolpikaResults, driverStandings, openF1Results, newsItems] = await Promise.all([
+    const [schedule, jolpikaResults, driverStandings] = await Promise.all([
       API.getSchedule(season),
       API.getResults(season).catch(() => []),
       API.getDriverStandings(season).catch(() => []),
-      API.getRecentResultsOpenF1(season).catch(() => []),
-      API.getNews().catch(() => []),
     ]);
 
-    const hasOpenF1 = openF1Results.length > 0;
+    const openF1Results = [];
+    const hasOpenF1 = false;
+
+    API.getNews()
+      .then(items => setHTML('miniNews', renderMiniNews(items)))
+      .catch(() => setHTML('miniNews', renderMiniNews([])));
 
     // Hero section
     if (hasOpenF1) {
@@ -166,7 +169,6 @@ async function loadHomePage(season) {
       const completedRaces = jolpikaResults.filter(r => raceStatus(r) === 'done');
       const lastRace = completedRaces[completedRaces.length - 1];
       if (lastRace) {
-        const fullResult = await API.getRaceResult(season, lastRace.round);
         setText('heroEyebrow', `ROUND ${lastRace.round} · ${season} FORMULA ONE WORLD CHAMPIONSHIP`);
         const heroTitle = document.getElementById('heroTitle');
         if (heroTitle) {
@@ -182,7 +184,7 @@ async function loadHomePage(season) {
         setText('heroSubtitle',
           `${lastRace.Circuit.circuitName}, ${lastRace.Circuit.Location.locality} · ${fmtDate(lastRace.date)}`
         );
-        setHTML('podiumGrid', renderPodium(fullResult));
+        setHTML('podiumGrid', renderPodium(lastRace));
       } else {
         setText('heroEyebrow', `${season} SEASON`);
         setText('heroTitle', 'Season Upcoming');
@@ -195,8 +197,8 @@ async function loadHomePage(season) {
     setHTML('miniStandings', renderMiniStandings(driverStandings));
     setText('standingsBadge', `R${driverStandings[0]?.round || '—'}`);
 
-    // News
-    setHTML('miniNews', renderMiniNews(newsItems));
+    // News loads separately so slow feeds do not block the page
+    setHTML('miniNews', renderMiniNews([]));
 
     // Next race + countdown
     const nextRace = findNextRace(schedule);

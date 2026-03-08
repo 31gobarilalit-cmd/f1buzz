@@ -15,6 +15,7 @@ app.use(cors({
 app.use(express.json());
 
 const CURRENT_SEASON = new Date().getFullYear();
+const NEWS_FEED_URL = 'https://news.google.com/rss/search?q=Formula+1&hl=en-IN&gl=IN&ceid=IN:en';
 
 // ── HELPERS ───────────────────────────────────
 async function fetchPage(url) {
@@ -30,6 +31,15 @@ async function fetchPage(url) {
 
 function cleanText(str) {
   return (str || '').replace(/\[.*?\]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeNewsTitle(title) {
+  return cleanText(title).replace(/\s+-\s+[^-]+$/, '');
+}
+
+function parseNewsSource(title) {
+  const match = cleanText(title).match(/\s+-\s+([^-]+)$/);
+  return match ? match[1].trim() : 'Google News';
 }
 
 // ── SCRAPE: SEASON RESULTS FROM WIKIPEDIA ─────
@@ -236,6 +246,50 @@ async function scrapeSchedule(year) {
   return result;
 }
 
+async function scrapeNews() {
+  const cacheKey = 'news_latest';
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+
+  const res = await axios.get(NEWS_FEED_URL, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; F1BuzzBot/1.0)',
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
+    timeout: 10000,
+  });
+
+  const $ = cheerio.load(res.data, { xmlMode: true });
+  const seen = new Set();
+  const items = [];
+
+  $('item').each((_, item) => {
+    if (items.length >= 6) return false;
+
+    const rawTitle = $('title', item).text();
+    const title = normalizeNewsTitle(rawTitle);
+    const link = $('link', item).text().trim();
+    const pub = $('pubDate', item).text().trim();
+    const source = parseNewsSource(rawTitle);
+
+    if (!title || !link) return;
+    const dedupeKey = title.toLowerCase();
+    if (seen.has(dedupeKey)) return;
+    seen.add(dedupeKey);
+
+    items.push({
+      title,
+      source,
+      link,
+      pub: pub ? new Date(pub).toISOString() : new Date().toISOString(),
+    });
+  });
+
+  const result = { items, updatedAt: new Date().toISOString() };
+  cache.set(cacheKey, result);
+  return result;
+}
+
 // ── ROUTES ────────────────────────────────────
 
 // Health check
@@ -288,6 +342,17 @@ app.get('/api/schedule/:year', async (req, res) => {
   } catch (err) {
     console.error('Schedule error:', err.message);
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Latest F1 news
+app.get('/api/news', async (req, res) => {
+  try {
+    const data = await scrapeNews();
+    res.json({ success: true, ...data });
+  } catch (err) {
+    console.error('News error:', err.message);
+    res.status(500).json({ success: false, error: err.message, items: [] });
   }
 });
 

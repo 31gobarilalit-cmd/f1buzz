@@ -29,12 +29,88 @@ async function apiFetch(url) {
   return data;
 }
 
+function normalizeBackendSchedule(races) {
+  return (races || []).map(race => ({
+    round: String(race.round ?? ''),
+    raceName: race.raceName || race.name || 'Grand Prix',
+    date: race.date || '',
+    time: race.time || '12:00:00Z',
+    Circuit: {
+      circuitName: race.Circuit?.circuitName || race.circuit || race.raceName || race.name || '-',
+      Location: {
+        locality: race.Circuit?.Location?.locality || race.locality || race.country || '-',
+        country: race.Circuit?.Location?.country || race.country || race.locality || '-',
+      },
+    },
+  }));
+}
+
+function normalizeBackendResults(races) {
+  return (races || []).map(race => ({
+    round: String(race.round ?? ''),
+    raceName: race.raceName || race.name || 'Grand Prix',
+    date: race.date || '',
+    time: race.time || '12:00:00Z',
+    Circuit: {
+      circuitName: race.Circuit?.circuitName || race.circuit || '-',
+      Location: {
+        locality: race.Circuit?.Location?.locality || race.locality || race.country || '-',
+        country: race.Circuit?.Location?.country || race.country || race.locality || '-',
+      },
+    },
+    Results: race.winner ? [{
+      Driver: {
+        givenName: String(race.winner).split(' ').slice(0, -1).join(' ') || String(race.winner),
+        familyName: String(race.winner).split(' ').slice(-1).join('') || '',
+      },
+      Constructor: {
+        name: race.team || '-',
+        constructorId: String(race.team || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''),
+      },
+      laps: race.laps || '',
+      Time: race.time ? { time: race.time } : undefined,
+      status: race.status || 'Finished',
+    }] : [],
+  }));
+}
+
+function normalizeBackendDriverStandings(standings) {
+  return (standings || []).map(item => ({
+    position: String(item.position ?? ''),
+    points: String(item.points ?? '0'),
+    wins: String(item.wins ?? '0'),
+    Driver: {
+      givenName: String(item.driver || '').split(' ').slice(0, -1).join(' ') || String(item.driver || ''),
+      familyName: String(item.driver || '').split(' ').slice(-1).join('') || '',
+      nationality: item.nationality || '',
+      code: String(item.driver || '').split(' ').map(part => part[0] || '').join('').slice(0, 3).toUpperCase(),
+    },
+    Constructors: [{
+      name: item.team || '-',
+      constructorId: String(item.team || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''),
+    }],
+  }));
+}
+
+function normalizeBackendConstructorStandings(standings) {
+  return (standings || []).map(item => ({
+    position: String(item.position ?? ''),
+    points: String(item.points ?? '0'),
+    wins: String(item.wins ?? '0'),
+    Constructor: {
+      name: item.team || '-',
+      nationality: item.nationality || '',
+      constructorId: String(item.team || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''),
+    },
+  }));
+}
+
 const API = {
 
   async getSchedule(season) {
     try {
       const data = await apiFetch(`${BACKEND}/api/schedule/${season}`);
-      if (data.success && data.races?.length) return data.races;
+      if (data.success && data.races?.length) return normalizeBackendSchedule(data.races);
     } catch (e) {
       console.warn('Backend schedule fetch failed, falling back to Jolpica:', e.message);
     }
@@ -45,7 +121,7 @@ const API = {
   async getResults(season) {
     try {
       const data = await apiFetch(`${BACKEND}/api/results/${season}`);
-      if (data.success && data.races?.length) return data.races;
+      if (data.success && data.races?.length) return normalizeBackendResults(data.races);
     } catch (e) {
       console.warn('Backend results fetch failed, falling back to Jolpica:', e.message);
     }
@@ -61,7 +137,7 @@ const API = {
   async getDriverStandings(season) {
     try {
       const data = await apiFetch(`${BACKEND}/api/standings/drivers/${season}`);
-      if (data.success && data.standings?.length) return data.standings;
+      if (data.success && data.standings?.length) return normalizeBackendDriverStandings(data.standings);
     } catch (e) {
       console.warn('Backend driver standings failed, falling back to Jolpica:', e.message);
     }
@@ -73,7 +149,7 @@ const API = {
   async getConstructorStandings(season) {
     try {
       const data = await apiFetch(`${BACKEND}/api/standings/constructors/${season}`);
-      if (data.success && data.standings?.length) return data.standings;
+      if (data.success && data.standings?.length) return normalizeBackendConstructorStandings(data.standings);
     } catch (e) {
       console.warn('Backend constructor standings failed, falling back to Jolpica:', e.message);
     }
@@ -143,58 +219,11 @@ const API = {
   },
 
   async getNews() {
-    // Use Anthropic API with web_search to get latest F1 news headlines
-    try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-          system: 'You fetch F1 news. Always respond with ONLY a JSON array, no markdown, no extra text.',
-          messages: [{
-            role: 'user',
-            content: `Search for the 6 most recent Formula 1 news headlines from today or this week.
-Return ONLY a raw JSON array like this (no markdown, no backticks):
-[
-  {"title":"headline here","source":"Autosport","link":"https://...","pub":"2026-03-08"},
-  ...
-]
-Keep titles concise, under 100 chars. Only real news, no duplicates.`
-          }]
-        })
-      });
-
-      const data = await response.json();
-
-      // Extract text from response content blocks
-      const text = data.content
-        ?.filter(b => b.type === 'text')
-        ?.map(b => b.text)
-        ?.join('') || '';
-
-      // Parse JSON from response
-      const clean = text.replace(/```json|```/g, '').trim();
-      const start = clean.indexOf('[');
-      const end   = clean.lastIndexOf(']');
-      if (start === -1 || end === -1) throw new Error('No JSON array found');
-
-      const items = JSON.parse(clean.slice(start, end + 1));
-      if (Array.isArray(items) && items.length) {
-        console.log(`News loaded via AI search: ${items.length} items`);
-        return items;
-      }
-    } catch (e) {
-      console.warn('AI news fetch failed:', e.message);
-    }
-
-    // Fallback: backend RSS scraper
     try {
       const data = await apiFetch(`${BACKEND}/api/news`);
-      if (data.success && data.items?.length) return data.items;
+      if (data.success && Array.isArray(data.items)) return data.items;
     } catch (e) {
-      console.warn('Backend news also failed:', e.message);
+      console.warn('Backend news fetch failed:', e.message);
     }
 
     return [];
