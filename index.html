@@ -74,6 +74,7 @@
       <section class="hero" id="heroSection">
         <div class="hero-bg-lines"></div>
         <div class="hero-inner">
+          <!-- LEFT: race result + video -->
           <div class="hero-left">
             <div class="hero-eyebrow" id="heroEyebrow">Loading latest race...</div>
             <h1 class="hero-title" id="heroTitle">-</h1>
@@ -84,7 +85,28 @@
                 <span>Fetching race data...</span>
               </div>
             </div>
+            <!-- VIDEO sits here, flush below podium, aligned with standings -->
+            <div class="hero-video-wrap">
+              <div class="hero-video-label">
+                <span class="hero-video-kicker">TURN IT UP · STARTING GRID</span>
+              </div>
+              <div class="intro-video-shell">
+                <video
+                  class="intro-video-frame"
+                  autoplay
+                  muted
+                  controls
+                  playsinline
+                  loop
+                  preload="metadata"
+                >
+                  <source src="video/F1_Opening_Titles_2026.mp4" type="video/mp4" />
+                  Your browser does not support the intro video.
+                </video>
+              </div>
+            </div>
           </div>
+          <!-- RIGHT: standings card -->
           <div class="hero-right">
             <div class="mini-standings-card">
               <div class="mini-header">
@@ -93,35 +115,6 @@
               </div>
               <div id="miniStandings"><div class="spinner-center"><div class="spinner"></div></div></div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section-wrap intro-video-section">
-        <div class="section-hdr">
-          <div class="section-title">STARTING GRID</div>
-        </div>
-        <div class="intro-video-card">
-          <div class="intro-video-copy">
-            <div class="intro-video-kicker">TURN IT UP</div>
-            <h2 class="intro-video-title">Full Throttle</h2>
-            <p class="intro-video-text">
-              A high-energy welcome to the world's fastest championship.
-            </p>
-          </div>
-          <div class="intro-video-shell">
-            <video
-              class="intro-video-frame"
-              autoplay
-              muted
-              controls
-              playsinline
-              loop
-              preload="metadata"
-            >
-              <source src="video/F1_Opening_Titles_2026.mp4" type="video/mp4" />
-              Your browser does not support the intro video.
-            </video>
           </div>
         </div>
       </section>

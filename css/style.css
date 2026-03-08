@@ -183,10 +183,10 @@ nav { display: flex; gap: 2px; flex: 1; }
 .hero-inner {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 48px 28px;
+  padding: 28px 28px 20px;
   display: grid;
   grid-template-columns: 1fr 360px;
-  gap: 48px;
+  gap: 32px;
   align-items: start;
   position: relative;
 }
@@ -194,7 +194,7 @@ nav { display: flex; gap: 2px; flex: 1; }
   font-family: 'Share Tech Mono', monospace;
   font-size: 11px; color: var(--red);
   letter-spacing: 3px; text-transform: uppercase;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   display: flex; align-items: center; gap: 8px;
 }
 .hero-eyebrow::before {
@@ -202,14 +202,14 @@ nav { display: flex; gap: 2px; flex: 1; }
 }
 .hero-title {
   font-family: 'Orbitron', monospace;
-  font-size: 44px; font-weight: 900;
+  font-size: 34px; font-weight: 900;
   line-height: 1.0;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 .hero-title .country { color: var(--gold); }
 .hero-subtitle {
-  font-size: 16px; color: var(--gray2);
-  letter-spacing: 0.5px; margin-bottom: 32px;
+  font-size: 14px; color: var(--gray2);
+  letter-spacing: 0.5px; margin-bottom: 16px;
 }
 .podium-grid {
   display: grid;
@@ -220,7 +220,7 @@ nav { display: flex; gap: 2px; flex: 1; }
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 16px;
+  padding: 10px 12px;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .podium-card:hover {
@@ -232,8 +232,8 @@ nav { display: flex; gap: 2px; flex: 1; }
 .podium-card.p3 { border-top: 3px solid var(--bronze); }
 .pod-pos {
   font-family: 'Orbitron', monospace;
-  font-size: 28px; font-weight: 900;
-  margin-bottom: 4px;
+  font-size: 20px; font-weight: 900;
+  margin-bottom: 2px;
 }
 .pod-pos.p1 { color: var(--gold); }
 .pod-pos.p2 { color: var(--silver); }
@@ -908,7 +908,23 @@ footer {
 }
 
 .intro-video-section {
-  padding-top: 28px;
+  padding-top: 0;
+  padding-bottom: 28px;
+}
+
+/* ── HERO INLINE VIDEO ───────────────────────── */
+.hero-video-wrap {
+  margin-top: 18px;
+}
+.hero-video-label {
+  margin-bottom: 8px;
+}
+.hero-video-kicker {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--red);
+  text-transform: uppercase;
 }
 
 .intro-video-card {
